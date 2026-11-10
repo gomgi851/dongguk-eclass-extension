@@ -1,11 +1,19 @@
 import {test,expect,chromium} from '@playwright/test';
 import path from 'node:path';
+import os from 'node:os';
+import {mkdtemp,cp,readFile,writeFile,rm} from 'node:fs/promises';
 import {fixture} from './fixtures.mjs';
 
 test('installed MV3 popup, CSP, unknown items and theme/grid rendering',async({},testInfo)=>{
- const extension=path.resolve('extension');
+ // Offscreen fetches are not intercepted by page routing. Replace only that
+ // network boundary in a temporary extension copy; never call the school server.
+ const temporary=await mkdtemp(path.join(os.tmpdir(),'eclass-mv3-'));
+ const extension=path.join(temporary,'extension');await cp(path.resolve('extension'),extension,{recursive:true});
+ const paths=['/','/course/view.php','/mod/assign/index.php','/local/ubattendance/attendance_book.php','/report/ubcompletion/progress.php'];
+ const responses=Object.fromEntries(paths.map(p=>[p,fixture('https://eclass.dongguk.edu'+p)]));
+ await writeFile(path.join(extension,'network-fixture.js'),`const responses=${JSON.stringify(responses)};globalThis.fetch=async(url,options={})=>{if(options.signal?.aborted)throw new DOMException('Aborted','AbortError');const parsed=new URL(url);if(parsed.origin!=='https://eclass.dongguk.edu'||!responses[parsed.pathname])throw Error('Unexpected fixture request');return {ok:true,url:parsed.href,text:async()=>responses[parsed.pathname]};};`);
+ const offscreen=path.join(extension,'offscreen.html');await writeFile(offscreen,(await readFile(offscreen,'utf8')).replace('<script','<script src="network-fixture.js"></script><script'));
  const context=await chromium.launchPersistentContext('',{channel:'chromium',headless:true,args:[`--disable-extensions-except=${extension}`,`--load-extension=${extension}`]});
- await context.tracing.start({screenshots:true,snapshots:true,sources:true});
  const routed=[];
  try{
   await context.route('https://eclass.dongguk.edu/**',async route=>{
@@ -66,5 +74,8 @@ test('installed MV3 popup, CSP, unknown items and theme/grid rendering',async({}
    }
    await expect(page.locator('.activityicon').first()).toHaveCSS('filter','none');
   }
- }finally{await context.tracing.stop({path:testInfo.outputPath('extension-trace.zip')});await context.close();}
+ }finally{
+  await context.close();
+  if(path.dirname(path.resolve(temporary))===path.resolve(os.tmpdir())&&path.basename(temporary).startsWith('eclass-mv3-'))await rm(temporary,{recursive:true,force:true});
+ }
 });
