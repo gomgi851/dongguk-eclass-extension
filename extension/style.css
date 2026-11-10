@@ -10,7 +10,7 @@ h1{display:flex;align-items:center;gap:8px;min-width:0;font-size:18px;line-heigh
 .brand-accent{color:var(--brand)}
 .logo{display:inline-grid;place-items:center;background:var(--logo-bg);border:1px solid var(--logo-border);color:var(--p159);border-radius:8px;width:30px;height:30px;font-size:23px;font-weight:800}
 button,input,select{font:inherit}
-button{cursor:pointer;border:1px solid var(--border);border-radius:7px;background:var(--surface);padding:9px 12px;color:var(--text);font-weight:600;transition:background .15s,border-color .15s}
+button{cursor:pointer;border:1px solid var(--border);border-radius:7px;background:var(--surface);padding:9px 12px;color:var(--text);font-weight:600;transition:border-color .15s}
 button:hover{border-color:var(--p144)}
 button:disabled{opacity:.45;cursor:default}
 .icon-button{position:relative;display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--border);border-radius:7px;padding:0;background:var(--surface);color:var(--text);flex-shrink:0}

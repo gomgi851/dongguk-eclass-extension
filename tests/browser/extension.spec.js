@@ -39,6 +39,8 @@ test('installed MV3 popup, CSP, unknown items and theme/grid rendering',async({}
   await popup.getByRole('button',{name:'확인 필요 1건 · 직접 확인 ›',exact:true}).click();
   await expect(popup.locator('#results')).toContainText('출석 자동 확인 불가');
   await popup.getByRole('switch',{name:'다크 모드',exact:true}).uncheck();
+  await expect(popup.locator('html')).toHaveAttribute('data-theme','light');
+  await expect(popup.locator('[data-submission="pending"]')).toHaveCSS('background-color','rgb(255, 255, 255)');
   await popup.getByRole('button',{name:'설정',exact:true}).click();
   await popup.getByRole('switch',{name:'모든 주차 한 번에 보기'}).check();
   await popup.getByRole('button',{name:'설정 닫기'}).click();
@@ -46,6 +48,9 @@ test('installed MV3 popup, CSP, unknown items and theme/grid rendering',async({}
   expect(errors).toEqual([]);
   await popup.screenshot({path:testInfo.outputPath('popup-light.png')});
   await popup.getByRole('switch',{name:'다크 모드',exact:true}).check();
+  await expect(popup.locator('html')).toHaveAttribute('data-theme','dark');
+  await expect(popup.locator('[data-submission="pending"]')).toHaveCSS('background-color','rgb(24, 19, 15)');
+  await expect(popup.locator('.switch-thumb')).toHaveCSS('transform','matrix(1, 0, 0, 1, 24, 0)');
   await popup.screenshot({path:testInfo.outputPath('popup-dark.png')});
   const page=await context.newPage();await page.goto('https://eclass.dongguk.edu/course/view.php?id=1');
   await expect(page.locator('#dg-week-layouts')).toBeVisible();
