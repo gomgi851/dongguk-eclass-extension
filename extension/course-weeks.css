@@ -1,0 +1,106 @@
+/* Override only the week-tab visibility, not nested/teacher-hidden activities. */
+html.dg-all-weeks .course-content ul.flexsections-level-1 > li.section.main:not([hidden]) {
+  display: block !important;
+  scroll-margin-top: 24px;
+  margin-bottom: 16px;
+}
+#dg-week-tools{display:none;align-items:center;gap:12px;flex-wrap:wrap;margin:14px 0 10px;font-size:13px;color:#6c5d50}
+html.dg-all-weeks #dg-week-tools{display:flex}
+#dg-hide-empty{font:inherit;font-size:13px;line-height:1.4;padding:7px 12px;border:1px solid #c8b9aa;border-radius:7px;background:#fff9f2;color:#6a391b;cursor:pointer}
+#dg-hide-empty:hover{background:#fff0df}
+#dg-hide-empty:focus-visible{outline:2px solid #c65a10;outline-offset:3px}
+#dg-hide-empty[aria-pressed=true]{background:#fbe4d0;border-color:#c65a10}
+html.dg-site-dark #dg-week-tools{color:#c6bcb2}
+html.dg-site-dark #dg-hide-empty{background:#30251c;color:#ffcfaa;border-color:#775038!important}
+html.dg-site-dark #dg-hide-empty[aria-pressed=true]{background:#593017;border-color:#bd6a32!important}
+html.dg-all-weeks.dg-hide-empty .course-content ul.flexsections-level-1 > li.section.main.dg-empty-week,
+html.dg-all-weeks.dg-hide-empty .course-content .section_tab > li.dg-empty-week{display:none!important}
+/* Keep course shortcuts and the empty-week control on the same toolbar row. */
+html.dg-all-weeks .course-content li#section-0 > .content{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px}
+html.dg-all-weeks .course-content li#section-0 > .content > ul.section.img-text{flex:0 0 auto;width:auto!important;margin-bottom:0}
+html.dg-all-weeks .course-content li#section-0 > .content > #dg-week-tools{flex:1 0 auto;margin:0;white-space:nowrap}
+html.dg-all-weeks .course-content li#section-0 > .content > :not(ul.section.img-text):not(#dg-week-tools){flex:0 0 100%;width:100%;min-width:0}
+html.dg-all-weeks .course-content{container-type:inline-size}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1{display:grid!important;grid-template-columns:repeat(var(--dg-week-cols,2),minmax(0,1fr));gap:14px;align-items:start;padding:0;margin-top:0}
+html.dg-all-weeks[data-dg-week-layout="2"]{--dg-week-cols:2}
+html.dg-all-weeks[data-dg-week-layout="4"]{--dg-week-cols:4}
+html.dg-all-weeks[data-dg-week-layout="8"]{--dg-week-cols:8}
+html.dg-all-weeks[data-dg-week-layout="auto"] .course-content ul.flexsections-level-1{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))!important}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 > li.section.main{width:auto!important;min-width:0;margin:0!important;box-sizing:border-box;height:100%;border-radius:8px}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .content{min-width:0}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .activityinstance{min-width:0;overflow-wrap:anywhere;padding-right:0!important}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .actions{position:static!important;display:block;margin:6px 0 0;float:none!important;text-align:right}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .completionstr{position:static!important}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .displayoptions{display:block;white-space:normal;overflow-wrap:anywhere;font-size:12px;line-height:1.5}
+@container (max-width:2399px){html.dg-all-weeks[data-dg-week-layout="8"] .course-content ul.flexsections-level-1{--dg-week-cols:4}}
+@container (max-width:899px){html.dg-all-weeks:is([data-dg-week-layout="4"],[data-dg-week-layout="8"]) .course-content ul.flexsections-level-1{--dg-week-cols:2}}
+@container (max-width:559px){html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1{--dg-week-cols:1}}
+#dg-week-layouts{display:inline-flex;align-items:center;gap:3px;padding:3px;border:1px solid #c8b9aa;border-radius:9px;background:#fff9f2}
+#dg-week-layouts button{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;flex-shrink:0;width:34px;height:30px;margin:0;padding:0;border:0;border-radius:5px;color:#766353;background:transparent;font:700 10px/1 system-ui,sans-serif;cursor:pointer}
+#dg-week-layouts button[data-layout=auto]{width:43px;letter-spacing:.3px}
+#dg-week-layouts button:hover{background:#f1dfce;color:#7e3d14}
+#dg-week-layouts button[aria-pressed=true]{background:#e8c5a4;color:#552b0e}
+#dg-week-layouts button:focus-visible{outline:2px solid #c65a10;outline-offset:2px}
+html.dg-site-dark #dg-week-layouts{background:#201a15;border-color:#5b4230!important}
+html.dg-site-dark #dg-week-layouts button{color:#a79788;background:transparent}
+html.dg-site-dark #dg-week-layouts button:hover{color:#ffcfaa;background:#38271b}
+html.dg-site-dark #dg-week-layouts button[aria-pressed=true]{color:#ffd9b8;background:#68391c}
+/* Compact, grouped course-view toolbar. */
+#dg-week-tools{box-sizing:border-box;width:fit-content;max-width:100%;padding:5px!important;gap:8px!important;background:#faf5ee;border:1px solid #d7c9ba;border-radius:12px}
+html.dg-all-weeks .course-content li#section-0 > .content > #dg-week-tools{flex:0 1 auto;white-space:normal}
+#dg-hide-empty{box-sizing:border-box;min-height:34px;padding:6px 11px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap;background:transparent;border-color:transparent}
+#dg-week-tools > span{padding:6px 8px;border-radius:6px;font-size:12px;line-height:1.4;color:#7b6b5c;background:#eee5da;white-space:nowrap}
+#dg-week-layouts{border:0;border-left:1px solid #d7c9ba;border-radius:0;padding:0 0 0 8px;background:transparent;gap:3px}
+#dg-week-layouts button{height:34px;border-radius:7px}
+html.dg-site-dark #dg-week-tools{background:#191612;border-color:#493726!important}
+html.dg-site-dark #dg-hide-empty{color:#e6b68e;background:transparent;border-color:transparent!important}
+html.dg-site-dark #dg-hide-empty:hover{background:#302319;border-color:#775038!important}
+html.dg-site-dark #dg-hide-empty[aria-pressed=true]{background:#49301e;color:#ffdbba;border-color:#81502d!important}
+html.dg-site-dark #dg-week-tools > span{background:#28211b;color:#bcae9f}
+html.dg-site-dark #dg-week-layouts{background:transparent;border-color:#493726!important}
+html.dg-site-dark #dg-week-layouts button[aria-pressed=true]{background:#68391c;color:#ffdfc3}
+/* Grid cards use the available width instead of keeping list-view indentation. */
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1{align-items:start}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 > li.section.main{height:auto;align-self:start;min-height:160px;padding:12px!important}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .flexsections-level-2 > li.section{margin:0!important;padding:8px 0!important;border:0!important;box-shadow:none!important;background:transparent!important}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .section.img-text{padding-left:0!important;margin:8px 0 12px!important}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .activity{padding:6px 0!important;min-width:0}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .activity > div{padding-right:0!important}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .mod-indent-outer,
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .mod-indent-outer > div{display:block!important;width:auto!important;min-width:0}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .mod-indent{display:none!important}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .activityinstance{display:block!important;width:auto!important;max-width:100%;min-width:0}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .activityinstance a{display:flex!important;align-items:flex-start;gap:6px;white-space:normal!important;line-height:1.5;min-width:0;padding:0!important}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .instancename{display:block;min-width:0;overflow-wrap:anywhere;word-break:normal;font-size:14px}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .activityicon{float:none!important;position:static!important;width:20px!important;height:20px!important;flex:0 0 20px;margin:2px 0 0!important}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .displayoptions{padding-top:6px;font-size:12px!important;line-height:1.6;white-space:normal!important;overflow-wrap:anywhere}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .actions{display:flex!important;align-items:center;justify-content:flex-end;position:static!important;min-height:24px;gap:4px;margin-top:6px}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .actions form{margin:0!important}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .actions .completionstr{position:static!important;display:inline!important;margin-right:4px!important}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 :is(.activityinstance a,.instancename,.displayoptions,.actions){text-indent:0!important}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .actions :is(form,form > div){display:inline-flex;align-items:center;justify-content:flex-end;gap:4px;min-width:0}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .actions :is(.btn,.icon){position:static!important;float:none!important;margin:0!important}
+#dg-week-tools > span{display:inline-flex;align-items:center;box-sizing:border-box;min-height:34px}
+/* Title and completion share a row; dates span the row beneath them. */
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .mod-indent-outer > .mod-indent{display:none!important}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .mod-indent-outer > div:not(.mod-indent){display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:6px 8px}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .activityinstance{display:contents!important}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .activityinstance > a{grid-column:1;grid-row:1;min-width:0}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .activityinstance > .displayoptions{grid-column:1 / -1;grid-row:2;min-width:0;padding-top:0}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .actions{grid-column:2;grid-row:1;align-self:start;margin:0!important;white-space:nowrap;line-height:1.5}
+/* Availability notices must not become an auto-sized column beside the title.
+   Unavailable activities may have a plain span instead of a clickable anchor. */
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .activityinstance > :is(.instancename,.dimmed_text,.dimmed){grid-column:1;grid-row:1;min-width:0;text-indent:0!important;white-space:normal!important;overflow-wrap:anywhere}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 :is(.availabilityinfo,.contentafterlink){grid-column:1 / -1;min-width:0;max-width:100%;box-sizing:border-box;width:auto!important;float:none!important;margin:4px 0 0!important;white-space:normal!important;overflow-wrap:anywhere;word-break:normal}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 :is(.availabilityinfo,.contentafterlink) :is(span,p,div){white-space:normal!important;overflow-wrap:anywhere}
+html.dg-all-weeks:not([data-dg-week-layout="1"]) .course-content ul.flexsections-level-1 .activityinstance > :is(.availabilityinfo,.contentafterlink){grid-row:auto}
+html.dg-all-weeks .course-content li#section-0 > .content > #dg-week-tools{margin-left:auto!important}
+html.dg-all-weeks .course-content ul.flexsections-level-1 > li.section.main.dg-current-week{background-color:#fff4e7!important;border-color:#cc6a24!important;box-shadow:inset 3px 0 0 #e87821,0 0 0 1px #e8782120!important}
+html.dg-all-weeks .course-content ul.flexsections-level-1 > li.section.main.dg-selected-week{border-color:#b08866!important;box-shadow:inset 2px 0 0 #b08866!important}
+.dg-week-mark{display:inline-flex;align-items:center;margin-left:8px;padding:3px 6px;border-radius:5px;background:#a84c09;color:#fff;font:600 11px/1.3 system-ui,sans-serif;vertical-align:middle;white-space:nowrap}
+.dg-selected-week .dg-week-mark{background:#e6d4c2;color:#624730}
+html.dg-site-dark.dg-all-weeks .course-content ul.flexsections-level-1 > li.section.main.dg-current-week{background-color:#302116!important;border-color:#bf6d33!important;box-shadow:inset 3px 0 0 #ed8d40,0 0 0 1px #ed8d401f!important}
+html.dg-site-dark .dg-week-mark{background:#7b441e;color:#ffe1bf}
+html.dg-site-dark .dg-selected-week .dg-week-mark{background:#3d3025;color:#d2bda8}
+html.dg-all-weeks .course-content .section_tab > li.dg-current-week > a{box-shadow:inset 0 -3px 0 #e87821}
+html.dg-all-weeks .course-content .section_tab::before{content:none!important;display:none!important}

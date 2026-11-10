@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {readFile} from 'node:fs/promises';
+import {DOMParser} from 'linkedom';
+const source=await readFile('extension/site-theme.js','utf8');
+const listeners=[];let saved={siteDark:true,theme:'light',allWeeks:true};
+const chrome={storage:{onChanged:{addListener:f=>listeners.push(f)},local:{get:async()=>({...saved})}}};
+async function page(){const document=new DOMParser().parseFromString('<html><body><video></video><img src="image.png"></body></html>','text/html');vm.runInNewContext(source,{chrome,document});await Promise.resolve();return document;}
+const first=await page(),second=await page();
+assert.ok(first.documentElement.classList.contains('dg-site-dark'));
+assert.ok(second.documentElement.classList.contains('dg-site-dark'));
+for(const listener of listeners)listener({theme:{newValue:'dark'}},'local');
+assert.ok(first.documentElement.classList.contains('dg-site-dark'));
+for(const listener of listeners)listener({siteDark:{newValue:false}},'sync');
+assert.ok(first.documentElement.classList.contains('dg-site-dark'));
+saved.siteDark=false;for(const listener of listeners)listener({siteDark:{newValue:false}},'local');
+assert.ok(!first.documentElement.classList.contains('dg-site-dark'));
+assert.ok(!second.documentElement.classList.contains('dg-site-dark'));
+const next=await page();assert.ok(!next.documentElement.classList.contains('dg-site-dark'));
+assert.equal(first.querySelector('img').getAttribute('src'),'image.png');assert.equal(first.querySelector('video').getAttribute('style'),null);
+console.log('PASS: saved site theme, multi-page updates, separate popup theme, local-only events, off restores root class, media DOM unchanged');

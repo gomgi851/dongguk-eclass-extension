@@ -1,0 +1,3 @@
+@font-face{font-family:Jalnan;src:url('fonts/Jalnan2.otf') format('opentype');font-display:swap}
+:root{color-scheme:dark}body{margin:0;background:#171310;color:#e7ddd3;font-family:Jalnan,system-ui,sans-serif}main{max-width:850px;margin:32px auto;padding:0 24px}a{color:#ffb16c;font-size:14px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.9 Jalnan,system-ui,sans-serif}a:focus-visible{outline:2px solid #ffb16c;outline-offset:4px}
+h1{font-size:26px;margin:22px 0 30px;color:#fff1e5}h2{font-size:18px;margin:34px 0 14px;padding-top:20px;border-top:1px solid #493726;color:#ffb16c}p,li{font-size:14px;line-height:1.9;overflow-wrap:anywhere}ul{padding-left:22px}li{padding-left:3px;margin-bottom:5px}p{color:#bfb1a4}

@@ -1,0 +1,15 @@
+node_modules/
+dist/
+work/
+outputs/
+.env
+.env.*
+!.env.example
+*.log
+*.crx
+*.pem
+*.key
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc

@@ -1,0 +1,30 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Package and validate release tag
+        run: python3 scripts/package.py --tag "$GITHUB_REF_NAME"
+      - name: Create versioned GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          options=()
+          if [[ "$version" == 0.* ]]; then options+=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" "dist/dongguk-eclass-$version.zip" dist/SHA256SUMS.txt --verify-tag --title "Dongguk e-Class $GITHUB_REF_NAME" --notes-file dist/RELEASE_NOTES.md "${options[@]}"

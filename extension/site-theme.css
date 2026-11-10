@@ -1,0 +1,81 @@
+/* Opt-in, reversible site colors. Media and embedded documents keep their colors. */
+html.dg-site-dark {color-scheme:dark;background:#141210!important}
+html.dg-site-dark body {background:#141210!important;color:#f1ede8!important}
+html.dg-site-dark :is(#page,#page-container,#page-content,#region-main,.course-content,#page-footer,.page-util) {background-color:#141210!important;color:#f1ede8!important}
+html.dg-site-dark :is(.front-box,.front-box-body,.front-box-content,.course-list,.course-link,.course-name,.block,.card,.card-body,.well,.panel,.panel-body,.modal-content,.dropdown-menu,.list-group-item,.section.main,.generaltable,.user_progress_table,.submissionstatustable,.submissionfull,.forum-post,.forumpost) {background-color:#201c18!important;color:#f1ede8!important;border-color:#493d32!important}
+html.dg-site-dark :is(h1,h2,h3,h4,h5,h6,.title,.instancename,.course-title,.sectionname,label,legend) {color:#f1ede8!important}
+html.dg-site-dark :is(p,td,th,dt,dd,.content,.summary,.prof,.semester-name,.text-muted,.dimmed_text,.date,.time) {color:#c6bcb2!important}
+html.dg-site-dark :is(a,.text-ubstrap) {color:#ffb16c!important}
+html.dg-site-dark a:hover {color:#ffd3ab!important}
+html.dg-site-dark :is(table,thead,tbody,tr,td,th,.section_tab,.section_tab li,.front-box-header,.course-list li,.front-box li,.block .header,.panel-heading,.card-header) {border-color:#493d32!important}
+html.dg-site-dark :is(th,thead,.panel-heading,.card-header,.section_tab li,.bg-light,.bg-white) {background-color:#29221c!important;color:#f1ede8!important}
+html.dg-site-dark :is(td,tbody tr,.front-box li) {background-color:#201c18!important}
+html.dg-site-dark :is(.table-striped tbody tr:nth-of-type(odd) td,.table-hover tbody tr:hover td) {background-color:#2c251f!important}
+html.dg-site-dark :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=hidden]):not([type=submit]):not([type=button]),textarea,select,.form-control,.custom-select,.btn-default,.btn-secondary) {background-color:#28211b!important;color:#f1ede8!important;border-color:#68513e!important}
+html.dg-site-dark :is(input,textarea)::placeholder {color:#b5a89b!important;opacity:1}
+html.dg-site-dark :is(.btn-primary,.section_tab li.active,.section_tab li.active a,.pagination .active a,.badge-course) {background-color:#bc570f!important;color:#fff!important;border-color:#e87924!important}
+html.dg-site-dark :is(.alert-warning,.alert-info,.availabilityinfo) {background-color:#392a1c!important;color:#ffd3ab!important;border-color:#8a5a31!important}
+html.dg-site-dark :is(.text-danger,.text-late,.overdue) {color:#ff9c86!important}
+html.dg-site-dark :is(.text-success,.submissionstatussubmitted,.submissionstatusgraded) {color:#a5d7a5!important;background-color:#213021!important}
+html.dg-site-dark :is(hr,.border,.border-top,.border-bottom) {border-color:#493d32!important}
+html.dg-site-dark :is(a,button,input,textarea,select):focus-visible {outline:2px solid #ffad65!important;outline-offset:2px}
+html.dg-site-dark :is(.col-block,.notices,.upcommings,.front-box-header){background-color:#201c18!important;color:#f1ede8!important}
+html.dg-site-dark .page-menu{background-color:#362313!important;border-bottom:1px solid #8a4b1f}
+html.dg-site-dark .page-menu a{color:#fff0e2!important}
+/* Actual Coursemos panels and nested text colors (verified against page DOM). */
+html.dg-site-dark #page-container #page-lnb,
+html.dg-site-dark #page-lnb :is(.block-coursehome,.block-quick-mod,.block-course-sections,.block-coursemos-submenu,.card-body,.mCSB_container,.topmenu,.submenu),
+html.dg-site-dark #page-lnb .topmenu-item.expand {background-color:#201c18!important;border-color:#493d32!important;color:#f1ede8!important}
+html.dg-site-dark #page-lnb :is(a,.item-link,.card-title),
+html.dg-site-dark #page-lnb .topmenu-item .submenu .submenu-item>a {color:#dfd6ce!important}
+html.dg-site-dark #page-lnb :is(a:hover,a.active,.item.active .item-link) {color:#ffb16c!important}
+html.dg-site-dark #page-container :is(.course-article,.course-article-box,.col-article,.course-article-header,.course-article-body,.article-list,.article-list-item) {background-color:#28221c!important;border-color:#493d32!important}
+html.dg-site-dark #page-container :is(.activity-name,.article-subject,.notice-title,.event-name,.fp-filename) {color:#f1ede8!important}
+html.dg-site-dark #page-container :is(.period,.article-date,.course-name,.course-title,.prof) {color:#c6bcb2!important}
+html.dg-site-dark #page-container :is(.course-label,.badge-course) {color:#fff!important}
+html.dg-site-dark #page-content :is(.breadcrumb,.generalbox,.box,.filemanager,.fp-content,.fp-file,.fp-thumbnail,.comment-area,.comment-list,.submissionstatus,.gradingstatus,.ubboard) {background-color:#201c18!important;color:#e0d7cf!important;border-color:#493d32!important}
+html.dg-site-dark #page-content :is(.no-overflow,.no-overflow div,.no-overflow span,.no-overflow font,.no-overflow li,#intro,#intro div,#intro span,#intro font) {color:#e0d7cf!important}
+html.dg-site-dark #page-content :is(pre,code) {background-color:#29221c!important;color:#f1ede8!important;border-color:#493d32!important}
+html.dg-site-dark #page-footer :is(div,p,span,li){color:#bdb1a6!important}
+html.dg-site-dark .dg-all-weeks .section_tab::before,
+html.dg-site-dark.dg-all-weeks .course-content .section_tab::before {color:#ffb16c!important}
+html.dg-site-dark :is(.alert-danger,.alert-danger h5,.alert-danger p,.alert-danger span){background-color:#3b2320!important;color:#ffd0c5!important;border-color:#8b4b3c!important}
+html.dg-site-dark :is(.alert-success,.alert-success h5,.alert-success p,.alert-success span){background-color:#213021!important;color:#c8e8c7!important;border-color:#486744!important}
+html.dg-site-dark :is(.alert-light,.alert-secondary){background-color:#29221c!important;color:#e0d7cf!important;border-color:#493d32!important}
+html.dg-site-dark .block_html a[href*="/ezguard/"] p{background-color:#33271e!important;color:#ffe0c5!important;border-color:#8a5a31!important}
+html.dg-site-dark .block_html a[href*="resetDevice"] p{background-color:#3b2320!important;color:#ffd0c5!important;border-color:#8b4b3c!important}
+html.dg-site-dark #page-lnb .mCSB_scrollTools .mCSB_draggerRail{background:#29221c!important}
+html.dg-site-dark #page-lnb .mCSB_scrollTools .mCSB_dragger_bar{background:#806750!important}
+/* Keep page separators quiet against the dark surface. */
+html.dg-site-dark #page-container :where(*) {border-color:#3d3228!important}
+html.dg-site-dark #page-container :is(.my-course-lists,.front-box-notice .notices,.col-block) {border-color:#3d3228!important;box-shadow:none!important}
+html.dg-site-dark #page-content :is(.nav-coursemos,.nav-tabs,.tab-display,.sub_tab,.grade-navigation){background-color:transparent!important;border-color:#594333!important}
+html.dg-site-dark #page-content .nav-coursemos .nav-link{background-color:#28211b!important;color:#dfd6ce!important;border-color:#493a2d!important}
+html.dg-site-dark #page-content .nav-coursemos .nav-link.active{background-color:#593017!important;color:#ffe4ce!important;border-color:#a65a26!important}
+html.dg-site-dark #page-content .nav-coursemos .nav-link:hover{background-color:#392a1f!important;color:#fff0e2!important}
+html.dg-site-dark #page-content :is(.ubboard_container,.ubboard_list,.ubboard_view,.ubboard_write,.paging_info,.keyword_search,.article-info,.attachments,.fp-navbar,.fitem,.fcontainer){background-color:#201c18!important;color:#dfd6ce!important}
+html.dg-site-dark #page-content .ubboard :is(.info,.writer,.hit,.paging_info div,.text_to_html,.text_to_html div,.text_to_html span){color:#dfd6ce!important}
+html.dg-site-dark #page-content :is(.tabtree,.tabtree ul,.tabtree li a,.paging,.paging a,.pagination .page-link){background-color:#28211b!important;color:#dfd6ce!important;border-color:#493a2d!important}
+html.dg-site-dark #page-content :is(.tabtree .here a,.pagination .active .page-link){background-color:#593017!important;color:#ffe4ce!important}
+html.dg-site-dark #page-content :is(.user-grade .levelodd,.user-grade .leveleven,.user-grade .column-itemname,.user-grade .b1t,.user-grade .b2t){background-color:#28211b!important;color:#dfd6ce!important}
+.dg-site-theme-control{display:inline-flex!important;position:relative;align-items:center;gap:8px;margin:0 14px 0 0!important;padding:0!important;color:#eee5dc!important;font:12px/1.2 system-ui,sans-serif!important;cursor:pointer;vertical-align:middle;white-space:nowrap}
+.dg-site-theme-control input{position:absolute!important;right:0;top:0;width:42px!important;height:24px!important;opacity:0!important;margin:0!important;cursor:pointer}
+.dg-site-theme-track{display:inline-block;width:42px;height:24px;border-radius:20px;background:#62574e!important;border:1px solid #887565;box-sizing:border-box;pointer-events:none}
+.dg-site-theme-track:after{content:'☀';display:flex;align-items:center;justify-content:center;position:absolute;right:20px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff5e9;color:#9a4e17;font:14px/1 sans-serif;transition:transform .15s}
+.dg-site-theme-control input:checked+.dg-site-theme-track{background:#8b451a!important;border-color:#d98b53}
+.dg-site-theme-control input:checked+.dg-site-theme-track:after{content:'☾';transform:translateX(17px);background:#21170f;color:#ffca9b}
+.dg-site-theme-control input:focus-visible+.dg-site-theme-track{outline:2px solid #ffa961;outline-offset:3px}
+#page-header .usermenu:has(>.dg-site-theme-control){display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+html.dg-site-dark #page-content .ubboard_view .well > :is(.subject,.info,.file,.content){background-color:#201c18!important;color:#dfd6ce!important;border-color:#3d3228!important}
+html.dg-site-dark #page-content .ubboard_view .subject{background-color:#29221c!important}
+html.dg-site-dark #page-content .ubboard :is(.paging_info,.paging_info .tc,.paging_info .tp,.subject,.info,.file,.content,.text_to_html,.text_to_html font){color:#dfd6ce!important}
+html.dg-site-dark #page-content :is(.ubboard_write .write_form,.ubboard_write .editor,.editor_atto_content,.mce-content-body,.tox-edit-area,.tox-toolbar,.tox-toolbar__primary,.tox-editor-header){background-color:#201c18!important;color:#dfd6ce!important}
+html.dg-site-dark #page-content :is(table.ubboard_table,.ubboard .file,.ubboard .files,.ubboard .file-list,.ubboard fieldset,.ubboard legend,.ubboard .ftoggler,.editor_atto_toolbar,.editor_atto_content_wrap,.editor_atto_toolbar button){background-color:#28211b!important;color:#dfd6ce!important;border-color:#3d3228!important}
+html.dg-site-dark #page-content .editor_atto_toolbar button:hover{background-color:#49331f!important;color:#ffe0c5!important}
+html.dg-site-dark #page-content .editor_atto_toolbar button:disabled{color:#9b8c7f!important}
+html.dg-site-dark #page-content :is(legend,.ftoggler){background-color:#28211b!important;border-color:#3d3228!important}
+html.dg-site-dark #page-content .description{color:#c6bcb2!important}
+html.dg-site-dark #page-content .badge-primary{background-color:#593017!important;color:#ffe4ce!important}
+html.dg-site-dark #page-content .btn-delete{background-color:#4d2e27!important;color:#ffded4!important}
+html.dg-site-dark #page-content .ubion_new{background-color:#853c2e!important;color:#fff2e9!important}
+html.dg-site-dark body#page-local-ubmanual-index #page-container li{color:#dfd6ce!important}
