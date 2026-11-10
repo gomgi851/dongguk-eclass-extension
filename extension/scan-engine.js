@@ -22,7 +22,7 @@ export function replaceScope(items,course,kind,fresh,checkedAt){
 export async function scanCourses({selected,previous={},read,signal,now=Date.now,onUpdate=async()=>{},accountKey=null}){
   let items=retainedItems(previous,selected),completed=0,latestCheckedAt=previous.checkedAt||null;
   const warnings=[],failedScopes=[];
-  const snapshot=()=>({items,warnings:[...warnings],failedScopes:[...failedScopes],coverageIncomplete:items.some(i=>i.unsupported),checkedAt:latestCheckedAt,accountKey});
+  const snapshot=()=>({items,warnings:[...warnings],failedScopes:[...failedScopes],coverageIncomplete:items.some(i=>i.state==='unknown'||i.unsupported),checkedAt:latestCheckedAt,accountKey});
   async function report(message){await onUpdate({snapshot:snapshot(),completed,total:selected.length,message});}
   function fail(course,kind,error){
     warnings.push(`${course.name} · ${kind}: ${error.message}`);
@@ -68,6 +68,8 @@ export async function scanCourses({selected,previous={},read,signal,now=Date.now
           items.push(...[...unique.values()].map(i=>({...i,courseUrl:course.url,checkedAt:now(),stale:false})));
           warnings.push(`${course.name} · 미지원 학습 자료 ${unique.size}개 · 출석 여부를 학교에서 직접 확인하세요.`);
         }
+        const uncertain=items.filter(i=>i.courseUrl===course.url&&i.state==='unknown'&&!i.unsupported).length;
+        if(uncertain)warnings.push(`${course.name} · 상태 판별 불가 ${uncertain}개 · 학교에서 직접 확인하세요.`);
       }catch(error){if(error.name==='AbortError'||error.code==='AUTH')throw error;fail(course,'강좌',error);}
       completed++;
     }
@@ -78,7 +80,8 @@ export async function scanCourses({selected,previous={},read,signal,now=Date.now
   }
   const stale=items.filter(i=>i.stale).length;
   const unsupportedCount=items.filter(i=>i.unsupported).length;
-  const message=authExpired?'로그인이 필요합니다':stopped?'중지됨 · 이전 결과 유지':failedScopes.length?`일부 확인 실패${stale?' · 이전 결과 유지':''}`:unsupportedCount?`미지원 자료 ${unsupportedCount}개 · 직접 확인 필요`:`${completed}개 강좌 확인 완료`;
-  return {snapshot:{...snapshot(),fullyCheckedAt:!failedScopes.length&&!unsupportedCount&&!stopped&&!authExpired?now():previous.fullyCheckedAt||null},completed,total:selected.length,message,authExpired,stopped,partial:!!failedScopes.length||!!unsupportedCount||stopped||authExpired};
+  const unresolved=items.filter(i=>i.state==='unknown'||i.unsupported).length;
+  const message=authExpired?'로그인이 필요합니다':stopped?'중지됨 · 이전 결과 유지':failedScopes.length?`일부 확인 실패${stale?' · 이전 결과 유지':''}`:unsupportedCount?`미지원 자료 ${unsupportedCount}개 · 직접 확인 필요`:unresolved?`확인 필요 ${unresolved}개 · 직접 확인하세요`:`${completed}개 강좌 확인 완료`;
+  return {snapshot:{...snapshot(),fullyCheckedAt:!failedScopes.length&&!unresolved&&!stopped&&!authExpired?now():previous.fullyCheckedAt||null},completed,total:selected.length,message,authExpired,stopped,partial:!!failedScopes.length||!!unresolved||stopped||authExpired};
 }
 export {ORIGIN,parseCourses};

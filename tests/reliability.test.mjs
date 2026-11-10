@@ -37,6 +37,16 @@ test('video matches use module identity then week/session, with safe ambiguous f
  assert.equal(parsed.moduleId,'20');assert.equal(parsed.week,2);assert.equal(parsed.session,1);
 });
 
+test('unknown submission is not presented as a fully verified course',async()=>{
+ const result=await scanCourses({selected:[course],signal:new AbortController().signal,read:async url=>{
+  if(url===course.url)return doc('<a href="/mod/assign/index.php?id=1">과제</a><a href="/local/ubattendance/attendance_book.php?id=1">출석부</a>');
+  if(url.includes('/mod/assign/'))return doc('<table><thead><tr><th>제목</th><th>종료 일시</th><th>제출</th></tr></thead><tbody><tr><td><a href="/mod/assign/view.php?id=7">합성 과제</a></td><td>2099/11/01 23:59</td><td>판별 불가</td></tr></tbody></table>');
+  if(url.includes('/local/ubattendance/'))return doc('<a href="/report/ubcompletion/progress.php?id=1">출석부</a>');
+  return doc(table(''));
+ }});
+ assert.equal(result.partial,true);assert.equal(result.snapshot.coverageIncomplete,true);assert.equal(result.snapshot.fullyCheckedAt,null);assert.match(result.message,/확인 필요 1개/);
+});
+
 test('calendar retries, cached date rollover, and all-weeks off restoration',async()=>{
  let clock=Date.parse('2026-11-08T00:00:00+09:00'),calls=0;const timers=[],listeners=[];
  const d=doc(`<a href="https://eclass.dongguk.edu/mod/assign/index.php?id=1">과제</a><div class="course-content"><ul class="section_tab">${Array.from({length:16},(_,i)=>`<li id="section-${i+1}" class="${i===7?'active':''}"><a href="#section-${i+1}">${i+1}주차</a></li>`).join('')}</ul><ul class="flexsections-level-1">${Array.from({length:16},(_,i)=>`<li class="section main" id="section-${i+1}"><h3 class="sectionname">${i+1}주차</h3></li>`).join('')}</ul></div>`);

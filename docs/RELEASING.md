@@ -4,7 +4,7 @@
 
 1. `npm run version -- 0.7.4`으로 버전과 표시 문구를 갱신합니다. 기존 버전보다 커야 합니다.
 2. `CHANGELOG.md` 맨 위의 새 항목에 사용자에게 달라진 기능·수정·알려진 제한을 적습니다. 자리표시자가 남으면 빌드가 실패합니다. 이전 항목은 보존합니다.
-3. `npm test` 후 실제 Chrome에 `extension/`을 로드해 영향을 받는 화면을 확인합니다. 계정·학습 원문은 커밋하지 않습니다.
+3. `npm test`, `npx playwright install chromium`, `npm run test:browser` 후 실제 Chrome에 `extension/`을 로드해 영향을 받는 화면을 확인합니다. 계정·학습 원문은 커밋하지 않습니다.
 4. `python scripts/package.py`로 ZIP, SHA256, 릴리스 노트를 확인합니다. ZIP 최상위에 `manifest.json`이 있어야 합니다.
 5. 변경을 커밋하고 `v0.7.4` 태그를 같은 커밋에 붙인 뒤 main과 태그를 푸시합니다.
 6. `Release` Actions가 성공하면 버전별 GitHub Release에 ZIP과 체크섬이 붙습니다. `0.x`는 prerelease로 표시합니다. Chrome 웹 스토어 제출은 별도입니다.
