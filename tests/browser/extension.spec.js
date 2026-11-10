@@ -5,8 +5,11 @@ import {fixture} from './fixtures.mjs';
 test('installed MV3 popup, CSP, unknown items and theme/grid rendering',async({},testInfo)=>{
  const extension=path.resolve('extension');
  const context=await chromium.launchPersistentContext('',{channel:'chromium',headless:true,args:[`--disable-extensions-except=${extension}`,`--load-extension=${extension}`]});
+ await context.tracing.start({screenshots:true,snapshots:true,sources:true});
+ const routed=[];
  try{
   await context.route('https://eclass.dongguk.edu/**',async route=>{
+   routed.push(route.request().url());
    const html=fixture(route.request().url());
    await route.fulfill({status:200,contentType:html?'text/html':'image/svg+xml',body:html||'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="9" fill="#dd7733"/></svg>'});
   });
@@ -17,7 +20,8 @@ test('installed MV3 popup, CSP, unknown items and theme/grid rendering',async({}
   popup.on('console',message=>{if(message.type()==='error'&&/Content Security Policy|inline event/i.test(message.text()))errors.push(message.text());});
   await popup.setViewportSize({width:480,height:600});await popup.goto(`chrome-extension://${extensionId}/dashboard.html`);
   await popup.getByRole('button',{name:'강좌 불러오기',exact:true}).click();
-  await expect(popup.locator('#courses input')).toHaveCount(1);
+  try{await expect(popup.locator('#courses input')).toHaveCount(1,{timeout:15000});}
+  catch(error){console.log('Course load diagnostics',JSON.stringify({routed,status:await popup.locator('#settings-status').textContent(),state:await worker.evaluate(()=>chrome.storage.local.get(['job','courseList']))}));throw error;}
   await popup.getByRole('button',{name:'선택 강좌 확인',exact:true}).click();
   await expect(popup.locator('#settings-status')).toContainText('미지원 자료', {timeout:30000});
   await popup.getByRole('button',{name:'설정 닫기'}).click();
@@ -62,5 +66,5 @@ test('installed MV3 popup, CSP, unknown items and theme/grid rendering',async({}
    }
    await expect(page.locator('.activityicon').first()).toHaveCSS('filter','none');
   }
- }finally{await context.close();}
+ }finally{await context.tracing.stop({path:testInfo.outputPath('extension-trace.zip')});await context.close();}
 });
