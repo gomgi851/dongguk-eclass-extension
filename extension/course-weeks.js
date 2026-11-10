@@ -2,7 +2,8 @@
   // Only change the client-side week tabs observed in Dongguk's flexsections format.
   // Leave every activity, completion button and server-side availability rule intact.
   const root=document.documentElement;
-  let revision=0,hideEmpty=false,button=null,summary=null,layout='1',layoutButtons=[],currentWeek=null,calendarStarted=false;
+  let revision=0,hideEmpty=false,button=null,summary=null,layout='1',layoutButtons=[],currentWeek=null;
+  let calendarDoc=null,calendarLoading=false,calendarAttempts=0,calendarAttemptAt=0,retryTimer=null;
   const initialSelected=document.querySelector('.course-content .section_tab > .active')?.id;
   const layouts=new Set(['1','2','4','8','auto']);
   const sections=()=>[...document.querySelectorAll('.course-content ul.flexsections-level-1 > li.section')];
@@ -23,20 +24,26 @@
     return week>=1&&week<=sections().length?week:null;
   }
   async function loadCalendar(){
-    if(calendarStarted||!root.classList.contains('dg-all-weeks')||!sections().length)return;
-    calendarStarted=true;
+    if(calendarDoc||calendarLoading||retryTimer||calendarAttempts>=3||!root.classList.contains('dg-all-weeks')||!sections().length)return;
     const link=document.querySelector('a[href*="/mod/assign/index.php"]');
     if(!link)return;
     const url=new URL(link.href,location.href);
     if(url.origin!==location.origin||url.pathname!=='/mod/assign/index.php')return;
+    calendarLoading=true;calendarAttempts++;calendarAttemptAt=Date.now();
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6000);
     try{
       const response=await fetch(url.href,{credentials:'include',cache:'no-store',signal:controller.signal});
-      if(!response.ok||new URL(response.url||url.href).origin!==location.origin)return;
-      currentWeek=calendarWeek(new DOMParser().parseFromString(await response.text(),'text/html'),Date.now());
+      if(!response.ok||new URL(response.url||url.href).origin!==location.origin)throw Error('학사 기간 조회 실패');
+      const doc=new DOMParser().parseFromString(await response.text(),'text/html');
+      if(![...doc.querySelectorAll('table thead')].some(el=>/학사\s*기간/.test(el.textContent)))throw Error('학사 기간 없음');
+      calendarDoc=doc;
+      currentWeek=calendarWeek(calendarDoc,Date.now());
       update();
-    }catch{/* Keep the truthful selected-week fallback if academic dates are unavailable. */}
-    finally{clearTimeout(timer);}
+    }catch{
+      // Keep the selected-week fallback and retry transient failures at most twice.
+      if(calendarAttempts<3){retryTimer=setTimeout(()=>{retryTimer=null;loadCalendar();},5000*calendarAttempts);retryTimer?.unref?.();}
+    }
+    finally{calendarLoading=false;clearTimeout(timer);}
   }
   function empty(section){
     if(section.querySelector('.activity,.availabilityinfo,img,svg,video,audio,iframe,object,embed,table,input,button,a[href]'))return false;
@@ -69,10 +76,11 @@
       });
       tools.append(button,summary,layoutGroup);nav.before(tools);
     }
-    const emptyIds=new Set();
-    const currentId=currentWeek?weeks.find(week=>Number(week.querySelector('.sectionname')?.textContent.match(/(\d+)\s*주차/)?.[1])===currentWeek)?.id:null;
+    if(calendarDoc)currentWeek=calendarWeek(calendarDoc,Date.now());
+    const expanded=root.classList.contains('dg-all-weeks'),emptyIds=new Set();
+    const currentId=expanded&&currentWeek?weeks.find(week=>Number(week.querySelector('.sectionname')?.textContent.match(/(\d+)\s*주차/)?.[1])===currentWeek)?.id:null;
     for(const week of weeks){
-      const current=week.id===currentId,selected=!currentId&&week.id===initialSelected;
+      const current=week.id===currentId,selected=expanded&&!currentId&&week.id===initialSelected;
       const value=empty(week)&&!current;
       week.classList.toggle('dg-empty-week',value);if(value)emptyIds.add(week.id);
       week.classList.toggle('dg-current-week',current);week.classList.toggle('dg-selected-week',selected);
@@ -80,6 +88,7 @@
       if(current||selected){
         if(!mark&&heading){mark=document.createElement('span');mark.className='dg-week-mark';heading.append(mark);}
         const label=current?'이번 주':'선택됨';if(mark&&mark.textContent!==label)mark.textContent=label;
+        if(mark)mark.title=current?'학사 기간과 한국 날짜 기준':'사이트에서 처음 선택된 주차 · 학사 기간 확인 불가';
       }else mark?.remove();
     }
     for(const tab of nav.children){tab.classList.toggle('dg-empty-week',emptyIds.has(tab.id));tab.classList.toggle('dg-current-week',tab.id===currentId);}
@@ -102,6 +111,15 @@
   chrome.storage.local.get(['allWeeks','hideEmptyWeeks','weekLayout']).then(data=>{
     if(revision===initialRevision){hideEmpty=data.hideEmptyWeeks===true;layout=layouts.has(data.weekLayout)?data.weekLayout:'1';apply(data.allWeeks);}
   }).catch(()=>apply(false));
+  const refreshCalendar=()=>{
+    if(document.hidden||!root.classList.contains('dg-all-weeks'))return;
+    if(!calendarDoc&&Date.now()-calendarAttemptAt>=60000)calendarAttempts=0;
+    update();
+  };
+  document.addEventListener('visibilitychange',refreshCalendar);
+  document.defaultView?.addEventListener('pageshow',refreshCalendar);
+  document.defaultView?.addEventListener('online',()=>{calendarAttempts=0;refreshCalendar();});
+  if(typeof setInterval==='function')setInterval(refreshCalendar,60000)?.unref?.();
   new MutationObserver(records=>{
     if(records.some(record=>!record.target.closest?.('#dg-week-tools')))update();
   }).observe(document.querySelector('.course-content')||document.body,{childList:true,subtree:true});

@@ -1,4 +1,4 @@
-import {ORIGIN,courses as parseCourses,moduleLinks,activityCatalog,assignments,progress,safeURL} from './parser.js';
+import {ORIGIN,courses as parseCourses,moduleLinks,activityCatalog,assignments,progress,safeURL,unsupportedLearning} from './parser.js';
 
 export function findLink(doc,path){
   return [...doc.querySelectorAll('a[href]')].map(a=>safeURL(a.getAttribute('href'))).find(u=>u&&new URL(u).pathname===path);
@@ -22,7 +22,7 @@ export function replaceScope(items,course,kind,fresh,checkedAt){
 export async function scanCourses({selected,previous={},read,signal,now=Date.now,onUpdate=async()=>{},accountKey=null}){
   let items=retainedItems(previous,selected),completed=0,latestCheckedAt=previous.checkedAt||null;
   const warnings=[],failedScopes=[];
-  const snapshot=()=>({items,warnings:[...warnings],failedScopes:[...failedScopes],checkedAt:latestCheckedAt,accountKey});
+  const snapshot=()=>({items,warnings:[...warnings],failedScopes:[...failedScopes],coverageIncomplete:items.some(i=>i.unsupported),checkedAt:latestCheckedAt,accountKey});
   async function report(message){await onUpdate({snapshot:snapshot(),completed,total:selected.length,message});}
   function fail(course,kind,error){
     warnings.push(`${course.name} · ${kind}: ${error.message}`);
@@ -39,6 +39,7 @@ export async function scanCourses({selected,previous={},read,signal,now=Date.now
       await report(`${completed+1}/${selected.length} · ${course.name}`);
       try{
         const home=await read(course.url),catalog=activityCatalog(home,course);
+        const unsupported=unsupportedLearning(catalog,course);
         await scope(course,'과제',async()=>{
           const url=moduleLinks(home,'assign')[0];
           if(!url)throw Error('목록 링크 없음');
@@ -54,8 +55,19 @@ export async function scanCourses({selected,previous={},read,signal,now=Date.now
           if(!url)throw Error('동영상 출석부 링크 없음');
           const result=progress(await read(url),course,catalog,now());
           if(!result.recognized)throw Error('출석부 형식을 확인하지 못함');
+          unsupported.push(...unsupportedLearning(result.unsupported||[],course));
           return result.items;
         });
+        const unique=new Map();
+        for(const item of unsupported){
+          const key=item.url!==course.url?item.url:`${item.materialType}:${item.title}`;
+          if(!unique.has(key))unique.set(key,item);
+        }
+        if(unique.size){
+          items=items.filter(i=>!(i.unsupported&&(i.courseUrl===course.url||(!i.courseUrl&&i.course===course.name))));
+          items.push(...[...unique.values()].map(i=>({...i,courseUrl:course.url,checkedAt:now(),stale:false})));
+          warnings.push(`${course.name} · 미지원 학습 자료 ${unique.size}개 · 출석 여부를 학교에서 직접 확인하세요.`);
+        }
       }catch(error){if(error.name==='AbortError'||error.code==='AUTH')throw error;fail(course,'강좌',error);}
       completed++;
     }
@@ -65,7 +77,8 @@ export async function scanCourses({selected,previous={},read,signal,now=Date.now
     else{warnings.unshift(error.message);stopped=true;}
   }
   const stale=items.filter(i=>i.stale).length;
-  const message=authExpired?'로그인이 필요합니다':stopped?'중지됨 · 이전 결과 유지':failedScopes.length?`일부 확인 실패${stale?' · 이전 결과 유지':''}`:`${completed}개 강좌 확인 완료`;
-  return {snapshot:{...snapshot(),fullyCheckedAt:!failedScopes.length&&!stopped&&!authExpired?now():previous.fullyCheckedAt||null},completed,total:selected.length,message,authExpired,stopped,partial:!!failedScopes.length||stopped||authExpired};
+  const unsupportedCount=items.filter(i=>i.unsupported).length;
+  const message=authExpired?'로그인이 필요합니다':stopped?'중지됨 · 이전 결과 유지':failedScopes.length?`일부 확인 실패${stale?' · 이전 결과 유지':''}`:unsupportedCount?`미지원 자료 ${unsupportedCount}개 · 직접 확인 필요`:`${completed}개 강좌 확인 완료`;
+  return {snapshot:{...snapshot(),fullyCheckedAt:!failedScopes.length&&!unsupportedCount&&!stopped&&!authExpired?now():previous.fullyCheckedAt||null},completed,total:selected.length,message,authExpired,stopped,partial:!!failedScopes.length||!!unsupportedCount||stopped||authExpired};
 }
 export {ORIGIN,parseCourses};

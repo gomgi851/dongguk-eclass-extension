@@ -30,11 +30,26 @@ export function activityCatalog(doc, course) {
     const title = titleEl?.cloneNode(true);
     title?.querySelectorAll('.accesshide').forEach(e=>e.remove());
     const dates = text(el.querySelector('.displayoptions')).split('~');
-    return {type, title: text(title), url: safeURL(el.querySelector('.activityinstance a[href]')?.getAttribute('href') || course.url),
+    const url=safeURL(el.querySelector('.activityinstance a[href]')?.getAttribute('href') || course.url);
+    let week=null,session=null;
+    for(let parent=el.parentElement;parent;parent=parent.parentElement){
+      if(!parent.matches('li.section'))continue;
+      const heading=text(parent.querySelector('.sectionname'));
+      week??=Number(heading.match(/(\d+)\s*주차/)?.[1])||null;
+      session??=Number(heading.match(/(\d+)\s*차시/)?.[1])||null;
+    }
+    return {type, title: text(title), url, moduleId:moduleId(url)||el.id?.match(/^module-(\d+)$/)?.[1]||null,week,session,
       start: kstDate(dates[0]), due: kstDate(dates[1]),
-      restricted: !!el.querySelector('.isrestricted'),
+      restricted: el.matches('.isrestricted')||!!el.querySelector('.isrestricted,.availabilityinfo'),
       available: kstDate(text(el.querySelector('.availabilityinfo')))};
   }).filter(a=>a.title);
+}
+function moduleId(url){if(!url)return null;const u=new URL(url,ORIGIN);return /^\/mod\/[^/]+\/view\.php$/.test(u.pathname)?u.searchParams.get('id'):null;}
+const unsupportedTypes=new Set(['econtents','scorm','h5pactivity','lti']);
+export function unsupportedLearning(catalog,course){
+  return catalog.filter(a=>unsupportedTypes.has(a.type)).map(a=>({kind:'동영상',title:a.title,course:course.name,url:a.url||course.url,
+    due:a.due??null,start:a.available??a.start??null,state:'unknown',unsupported:true,materialType:a.type,
+    evidence:`${a.type} 형식 · 출석 여부를 자동 확인할 수 없습니다. 학교에서 직접 확인하세요.`,source:'강의실 · 미지원 학습 자료'}));
 }
 export function assignments(doc, course) {
   const table = [...doc.querySelectorAll('table')].find(t=>text(t.querySelector('thead')).includes('종료 일시') && text(t.querySelector('thead')).includes('제출'));
@@ -54,16 +69,29 @@ export function assignments(doc, course) {
 export function progress(doc, course, catalog, now = Date.now()) {
   const table = doc.querySelector('table.user_progress_table');
   if (!table || !text(table.querySelector('thead')).includes('출석인정 요구시간')) return {items:[], recognized:false};
-  const items = [];
+  const items = [],unsupported=[];
+  let week=null,session=null;
   // Locate the material cell by its image, so week/session rowspans do not shift columns.
   for (const row of table.querySelectorAll('tbody tr')) {
     const cells = [...row.children];
     const index = cells.findIndex(c=>c.querySelector('img'));
     if (index < 0) continue;
     const material = cells[index], img = material.querySelector('img');
-    if (!/\/vod\//.test(img.getAttribute('src') || '')) continue;
+    const prefix=cells.slice(0,index).map(text).join(' '),rowWeek=Number(prefix.match(/(\d+)\s*주차/)?.[1])||null;
+    if(rowWeek&&rowWeek!==week){week=rowWeek;session=null;}
+    session=Number(prefix.match(/(\d+)\s*차시/)?.[1])||session;
+    const icon=img.getAttribute('src')||'',rowURL=safeURL(material.querySelector('a[href]')?.getAttribute('href'));
+    const type=icon.match(/\/(vod|econtents|scorm|h5pactivity|lti)\//)?.[1];
+    if(type&&unsupportedTypes.has(type)){
+      const title=text(material),matches=catalog.filter(a=>a.type===type&&a.title===title);
+      unsupported.push({type,title,url:rowURL||(matches.length===1?matches[0].url:null)});continue;
+    }
+    if (type!=='vod') continue;
     const title = text(material);
-    const candidates = catalog.filter(a=>a.type === 'vod' && a.title === title);
+    const id=moduleId(rowURL);
+    let candidates = catalog.filter(a=>a.type==='vod'&&(id?String(a.moduleId||moduleId(a.url))===id:a.title===title));
+    if(!id&&candidates.length>1&&week)candidates=candidates.filter(a=>a.week===week);
+    if(!id&&candidates.length>1&&session)candidates=candidates.filter(a=>a.session===session);
     const match = candidates.length === 1 ? candidates[0] : null;
     const learnedCell = cells[index+2]?.cloneNode(true);
     learnedCell?.querySelectorAll('button').forEach(e=>e.remove());
@@ -75,12 +103,12 @@ export function progress(doc, course, catalog, now = Date.now()) {
     const start = match?.available ?? match?.start ?? null;
     const state = /^[O○]$/.test(attendance) ? 'done' : attendance === '▲' ? 'late' :
       start && start > now ? 'upcoming' : attendance === 'X' || (learned === '-' && match && !match.restricted) ? 'pending' : 'unknown';
-    items.push({kind:'동영상', title, course:course.name, url:match?.url || course.url, due, start, state,
+    items.push({kind:'동영상', title, course:course.name, url:rowURL||match?.url || course.url, due, start, state,
       requiredSeconds:durationSeconds(text(cells[index+1])),learnedSeconds:learned==='-'?0:durationSeconds(learned),
       evidence:`출석 ${attendance || '미표시'} · 요구 ${text(cells[index+1])} · 학습 ${learned || '미표시'}`,
       source:'동영상 출석부 (주차 출석과 별도)'});
   }
-  return {items, recognized:true};
+  return {items, unsupported, recognized:true};
 }
 export function durationSeconds(value){
   if(!/^\d+:\d{2}(?::\d{2})?$/.test(value||''))return null;
@@ -90,8 +118,8 @@ export function durationSeconds(value){
 }
 export function phase(item, now = Date.now()) {
   if (item.state === 'done' || item.state === 'late') return 'done';
-  if (item.state === 'upcoming' || item.start > now) return 'upcoming';
   if (item.state === 'unknown') return 'unknown';
+  if (item.state === 'upcoming' || item.start > now) return 'upcoming';
   if (item.due && item.due < now) return 'expired';
   return 'pending';
 }

@@ -38,6 +38,7 @@
 | 동영상 | 개별 출석부를 기준으로 미수강 / 수강함 구분, 확인 가능한 경우 요구시간까지 남은 학습시간 표시 |
 | 확인 작업 | 강좌 선택, 진행·완료·중지·로그인 만료 안내, 팝업을 닫아도 수집 계속 |
 | 일부 실패 | 이전 결과를 유지하고 오래된 결과와 확인 실패를 표시 |
+| 확인 필요 | 판별되지 않은 과제·미지원 학습 자료의 개수와 바로 보기. 미지원 형식의 출석을 완료로 추정하지 않음 |
 | 주차 보기 | 전체 주차 펼치기, 빈 주차 숨기기, 목록·2열·4열·8열·AUTO 배열 |
 | 현재 주차 | 학사 기간을 확인할 수 있으면 이번 주 강조. 확인 불가 시 선택된 주차로 구분 |
 | 편의 | 글꼴 내장, 설정 저장, 업데이트 내역과 팝업 CSP 진단 표시 |
@@ -67,6 +68,7 @@
 ## 알아둘 범위
 
 - **퀴즈·설문·Teams 강의·공지로만 안내되는 과제는 집계하지 않습니다.**
+- `econtents`·SCORM 등 감지한 미지원 학습 형식은 동영상의 **확인 필요**에 표시합니다. 출석 상태를 자동 판단하는 지원과는 다르며 학교에서 직접 확인해야 합니다.
 - 결과는 마지막 확인 시점 기준입니다. 모르는 형식이나 실패를 완료로 간주하지 않습니다.
 - 과제 제출, 영상 재생, 이수·출석 상태 변경을 자동으로 수행하지 않습니다.
 - 학교 페이지 구조·강좌 구성에 따라 수집과 화면 보정이 일부 적용되지 않을 수 있습니다.
@@ -91,10 +93,12 @@
 ```sh
 npm ci
 npm test
+npx playwright install chromium
+npm run test:browser
 python scripts/package.py
 ```
 
-배포 ZIP은 `dist/`에 생성됩니다. 학교 로그인을 사용하지 않는 합성 HTML·모의 Chrome API 테스트로 파서, 필터, 백그라운드 수집, 주차 표시, 테마, CSP 구조를 검사합니다. 모든 실제 강좌·게시글·첨부 문서·설치 환경을 검증한 것은 아닙니다. 수정 사항은 실제 Chrome에서도 점검해야 합니다.
+배포 ZIP은 `dist/`에 생성됩니다. 합성 HTML·모의 Chrome API 테스트로 수집 로직을 검사하고, 별도 Chromium 테스트에서는 **실제 MV3 확장**을 임시 프로필에 로드해 팝업·설정·수집·CSP와 라이트/다크 그리드의 넘침·제목 폭·제한 안내 위치·게시글 색상 복원을 검사합니다. 학교 네트워크 응답은 합성 자료로 대체하며 개인 계정은 쓰지 않습니다. 검사 결과의 화면·실패 추적은 GitHub Actions의 `browser-validation` 첨부 파일에서 확인합니다. 모든 실제 강좌·학교 CSS·설치 환경을 검증한 것은 아니며, 픽셀 단위 스크린샷 기준 비교는 아직 포함하지 않습니다.
 
 ```text
 extension/          Chrome에 로드할 확장 소스와 글꼴·아이콘
@@ -110,15 +114,15 @@ CHANGELOG.md        버전별 변경 내역 원본
 변경 사항은 루트 [CHANGELOG.md](CHANGELOG.md)에 기록하고, GitHub Release에도 같은 버전의 내용을 싣습니다. 버전 태그를 푸시하면 테스트와 패키징 후 ZIP·체크섬을 첨부한 Release를 생성하도록 구성했습니다. 0.x는 베타 릴리스로 표시합니다. 상세 절차는 [RELEASING.md](docs/RELEASING.md)에 있습니다.
 
 ```sh
-npm run version -- 0.7.3
+npm run version -- 0.7.4
 # CHANGELOG.md의 새 항목을 작성하고 실제 Chrome에서 확인
 npm test
 python scripts/package.py
 git add .
-git commit -m "Release v0.7.3"
-git tag v0.7.3
+git commit -m "Release v0.7.4"
+git tag v0.7.4
 git push origin main
-git push origin v0.7.3
+git push origin v0.7.4
 ```
 
 이 자동화는 GitHub 배포만 처리하며 Chrome 웹 스토어 제출은 하지 않습니다.

@@ -1,7 +1,7 @@
 import {ORIGIN,safeURL,phase} from './parser.js';
 import {visibleItems,deadlineRemaining} from './filters.js';
 const $ = id=>document.getElementById(id);
-let courseList=[], items=[], warnings=[], checkedAt=null, busy=false, job=null;
+let courseList=[], items=[], warnings=[], checkedAt=null, fullyCheckedAt=null, busy=false, job=null;
 let kind='과제', submission='pending', selectedUrls=null;
 const labels={pending:'남음',upcoming:'공개 예정',unknown:'확인 필요',expired:'기한 지남',done:'완료·인정'};
 function node(tag,value,className){const el=document.createElement(tag);el.textContent=value;if(className)el.className=className;return el;}
@@ -52,6 +52,10 @@ function render(){
     b.querySelector('.count').textContent=visibleItems(items,{kind,submission:mode,period:$('filter').value}).length;
   });
   $('summary').textContent=checkedAt?`${date(checkedAt)} 확인`:'';
+  $('summary').title=fullyCheckedAt?`마지막 전체 확인: ${date(fullyCheckedAt)}`:'전체 확인이 완료된 기록이 없습니다.';
+  const unknown=items.filter(i=>i.kind===kind&&i.state==='unknown').length;
+  $('attention').hidden=!unknown;
+  $('attention').textContent=`확인 필요 ${unknown}건 · 직접 확인 ›`;
   $('warnings').textContent=warnings.join('\n');
   $('warning-details').hidden=!warnings.length;
   $('settings-dot').hidden=!warnings.length;
@@ -66,11 +70,12 @@ function render(){
     a.title=kind==='과제'?'과제 열기 · 수정 가능 여부는 강의실에서 확인':item.title;
     const state=phase(item);
     const label=state==='done'?(isTask?'제출함':item.state==='late'?'지각 인정':'수강함'):state==='pending'?(isTask?'미제출':'미수강'):labels[state];
-    const badge=node('span',label,`badge ${state}`);badge.title=item.evidence;
+    const badge=node('span',item.unsupported?'미지원 형식':label,`badge ${state}`);badge.title=item.evidence;
     top.append(node('span',item.course.replace(/\s*[-–]\s*\d+분반.*$/,'').replace(/\s*\(\d학기\)/,''),'course'));
     if(state!=='done'&&state!=='unknown')top.append(node('span',state==='upcoming'?'공개 예정':remaining(item.due),`countdown ${state==='expired'?'expired':''}`));
     meta.append(node('span',state==='upcoming'?`${date(item.start)} 공개`:`${date(item.due)}${item.due?' 마감':''}`,'deadline'),badge);
     row.append(top,a,meta);
+    if(item.unsupported)row.append(node('div','출석 자동 확인 불가 · 학교에서 직접 확인','unsupported-note'));
     if(item.kind==='동영상'&&state!=='done'&&item.requiredSeconds>0&&Number.isFinite(item.learnedSeconds)){
       const left=Math.max(0,item.requiredSeconds-item.learnedSeconds);
       const learning=node('div',left>0?`요구시간까지 약 ${Math.ceil(left/60)}분`:'요구시간 도달 · 출석 확인 필요','learning');
@@ -110,10 +115,11 @@ $('stop').addEventListener('click',async()=>{try{await chrome.runtime.sendMessag
 $('clear').addEventListener('click',async()=>{
   if(busy)return;
   await chrome.storage.local.remove(['snapshot','job','courseList','selectedUrls','scanIncomplete']);
-  items=[];warnings=[];checkedAt=null;courseList=[];selectedUrls=null;job=null;
+  items=[];warnings=[];checkedAt=null;fullyCheckedAt=null;courseList=[];selectedUrls=null;job=null;
   renderCourses();renderJob();openSettings();$('status').textContent='강좌를 불러오세요.';render();
 });
 function rememberView(){chrome.storage.local.set({view:{kind,submission,period:$('filter').value}});}
+$('attention').addEventListener('click',()=>{submission='all';$('filter').value='unknown';render();rememberView();});
 document.querySelectorAll('[data-kind]').forEach(b=>b.addEventListener('click',()=>{kind=b.dataset.kind;render();rememberView();}));
 document.querySelectorAll('[data-submission]').forEach(b=>b.addEventListener('click',()=>{submission=b.dataset.submission;if($('filter').value==='unknown')$('filter').value='all';render();rememberView();}));
 function syncPeriod(){
@@ -147,7 +153,7 @@ $('filter-menu').addEventListener('keydown',event=>{
 document.addEventListener('click',event=>{if(!event.target.closest('.filter-control'))closePeriod();});
 document.addEventListener('focusin',event=>{if(!event.target.closest('.filter-control'))closePeriod();});
 function applyData(data){
-  if(Object.hasOwn(data,'snapshot')){const snapshot=data.snapshot||{};items=snapshot.items||[];warnings=snapshot.warnings||[];checkedAt=snapshot.checkedAt||null;}
+  if(Object.hasOwn(data,'snapshot')){const snapshot=data.snapshot||{};items=snapshot.items||[];warnings=snapshot.warnings||[];checkedAt=snapshot.checkedAt||null;fullyCheckedAt=snapshot.fullyCheckedAt||null;}
   if(Object.hasOwn(data,'job'))job=data.job||null;
   if(Object.hasOwn(data,'courseList'))courseList=data.courseList||[];
   if(Object.hasOwn(data,'selectedUrls'))selectedUrls=data.selectedUrls??null;

@@ -25,7 +25,7 @@ for name in ['package.json', 'package-lock.json']:
     if name == 'package-lock.json':
         data['packages']['']['version'] = version
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-for relative in ['extension/dashboard.html', 'extension/사용방법.md', 'docs/USAGE.md']:
+for relative in ['extension/dashboard.html', 'extension/사용방법.md', 'docs/USAGE.md', 'docs/PRIVACY.md']:
     path = root / relative
     path.write_text(path.read_text(encoding='utf-8').replace('v' + old, 'v' + version), encoding='utf-8')
 date = datetime.now(timezone(timedelta(hours=9))).date().isoformat()

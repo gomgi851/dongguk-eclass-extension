@@ -116,3 +116,6 @@ body,button,input,select,textarea,.meta,.deadline,.note,.font-credit,#warnings,#
 #refresh svg{width:18px;height:18px}
 
 .brand-icon{width:32px;height:32px;flex-shrink:0;object-fit:contain}
+.attention-button{flex-shrink:0;text-align:left;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:var(--badge);color:var(--badge-ink);font-size:13px;line-height:1.5;cursor:pointer}
+.attention-button[hidden]{display:none}
+.unsupported-note{font-size:12px;line-height:1.5;color:var(--warn);margin-top:6px}

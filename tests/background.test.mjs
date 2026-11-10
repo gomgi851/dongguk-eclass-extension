@@ -48,6 +48,7 @@ assert.equal(data.courseList[0].name,'테스트 강좌');
 data.snapshot={items:[{kind:'과제',title:'이전 과제',course:'테스트 강좌',state:'pending'}],checkedAt:1};
 assert.equal((await send({type:'job:start',mode:'scan',selectedUrls})).ok,true);
 assert.equal(data.snapshot.items[0].title,'이전 과제','Do not blank previous results at scan start');
+assert.equal(data.snapshot.items[0].stale,true);
 assert.equal((await send({type:'job:start',mode:'scan',selectedUrls})).ok,false,'Reject duplicate scan');
 async function finished(){
   const deadline=Date.now()+3000;
@@ -68,9 +69,11 @@ assert.equal(data.snapshot.items.find(i=>i.kind==='동영상').stale,true,'Faile
 assert.equal(data.snapshot.items.find(i=>i.kind==='과제').stale,false);
 delay=100;await send({type:'job:start',mode:'scan',selectedUrls});await send({type:'job:stop'});await finished();
 assert.equal(data.job.status,'stopped');assert.equal(data.snapshot.items.length,2,'Cancel preserves results');
+failVideo=false;delay=1;await send({type:'job:start',mode:'scan',selectedUrls});await finished();
+assert.ok(data.snapshot.items.every(i=>!i.stale));const lastFullSuccess=data.snapshot.fullyCheckedAt;
 auth=true;delay=1;await send({type:'job:start',mode:'scan',selectedUrls});await finished();
-assert.equal(data.job.status,'error');assert.equal(data.job.authExpired,true);assert.equal(data.snapshot.items.length,2);
-auth=false;student='9999000002';await send({type:'job:start',mode:'scan',selectedUrls});await finished();
+assert.equal(data.job.status,'error');assert.equal(data.job.authExpired,true);assert.ok(data.snapshot.items.every(i=>i.stale));assert.equal(data.snapshot.fullyCheckedAt,lastFullSuccess);assert.equal(data.snapshot.items.length,2);
+auth=false;failVideo=true;student='9999000002';await send({type:'job:start',mode:'scan',selectedUrls});await finished();
 assert.equal(data.snapshot.items.length,1,'Another account must not inherit the old video results');
 assert.equal(data.snapshot.items[0].kind,'과제');
 console.log('PASS: real broker/offscreen modules with mock Chrome + HTML; popup-independent completion, duplicate prevention, partial merge, reopen, cancellation');

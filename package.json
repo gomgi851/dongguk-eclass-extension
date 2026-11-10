@@ -1,6 +1,6 @@
 {
   "name": "dongguk-eclass-extension",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "private": true,
   "type": "module",
   "description": "Unofficial Chrome extension for Dongguk e-Class learning status and course views",
@@ -10,9 +10,11 @@
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "package": "python scripts/package.py",
-    "version": "python scripts/version.py"
+    "version": "python scripts/version.py",
+    "test:browser": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.0",
     "linkedom": "^0.18.15"
   }
 }
