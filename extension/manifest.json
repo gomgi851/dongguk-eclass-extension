@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Dongguk e-Class",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "minimum_chrome_version": "116",
   "description": "과제 제출 상태와 동영상 출석부를 읽어 남은 학습을 모아봅니다.",
   "permissions": [

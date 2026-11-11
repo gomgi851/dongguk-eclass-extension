@@ -1,6 +1,6 @@
 {
   "name": "dongguk-eclass-extension",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "private": true,
   "type": "module",
   "description": "Unofficial Chrome extension for Dongguk e-Class learning status and course views",

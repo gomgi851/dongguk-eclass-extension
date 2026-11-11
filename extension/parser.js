@@ -117,6 +117,7 @@ export function durationSeconds(value){
   return parts.reduce((total,n)=>total*60+n,0);
 }
 export function phase(item, now = Date.now()) {
+  if (item.stale) return 'unknown';
   if (item.state === 'done' || item.state === 'late') return 'done';
   if (item.state === 'unknown') return 'unknown';
   if (item.state === 'upcoming' || item.start > now) return 'upcoming';

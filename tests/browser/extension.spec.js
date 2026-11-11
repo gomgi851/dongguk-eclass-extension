@@ -35,6 +35,17 @@ test('installed MV3 popup, CSP, unknown items and theme/grid rendering',async({}
   await popup.getByRole('button',{name:'설정 닫기'}).click();
   await popup.getByRole('button',{name:'확인 필요 1건 · 직접 확인 ›',exact:true}).click();
   await expect(popup.locator('#results')).toContainText('확인 필요한 과제');
+  const originalSnapshot=await worker.evaluate(async()=> (await chrome.storage.local.get('snapshot')).snapshot);
+  await worker.evaluate(async()=>{
+   const {snapshot}=await chrome.storage.local.get('snapshot');
+   await chrome.storage.local.set({snapshot:{...snapshot,items:snapshot.items.map(i=>i.kind==='과제'?{...i,state:'pending',stale:true}:i)}});
+  });
+  await expect(popup.locator('#results .badge')).toHaveText('확인 필요');
+  await expect(popup.locator('#results')).toContainText('갱신 필요 · 이전 미제출');
+  await popup.locator('[data-submission="pending"]').click();
+  await expect(popup.locator('#results .item')).toHaveCount(0);
+  await worker.evaluate(async snapshot=>chrome.storage.local.set({snapshot}),originalSnapshot);
+  await popup.getByRole('button',{name:'확인 필요 1건 · 직접 확인 ›',exact:true}).click();
   await popup.locator('[data-kind="동영상"]').click();
   await popup.getByRole('button',{name:'확인 필요 1건 · 직접 확인 ›',exact:true}).click();
   await expect(popup.locator('#results')).toContainText('출석 자동 확인 불가');

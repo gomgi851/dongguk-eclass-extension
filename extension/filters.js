@@ -1,7 +1,8 @@
 import {phase} from './parser.js';
-export function isSubmitted(item){return item.state==='done'||item.state==='late';}
+export function isSubmitted(item){return !item.stale&&(item.state==='done'||item.state==='late');}
 export function matchesSubmission(item,submission){
   if(submission==='all')return true;
+  if(item.stale)return false;
   if(submission==='done')return isSubmitted(item);
   return item.state==='pending'||item.state==='upcoming';
 }

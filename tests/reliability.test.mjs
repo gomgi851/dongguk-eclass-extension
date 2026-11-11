@@ -5,10 +5,29 @@ import {readFile} from 'node:fs/promises';
 import {DOMParser} from 'linkedom';
 import {progress,phase,activityCatalog} from '../extension/parser.js';
 import {scanCourses} from '../extension/scan-engine.js';
+import {visibleItems} from '../extension/filters.js';
 const doc=html=>new DOMParser().parseFromString(`<html><body>${html}</body></html>`,'text/html');
 const course={name:'합성 강좌',url:'https://eclass.dongguk.edu/course/view.php?id=1'};
 const row=(prefix,material)=>`<tr>${prefix}<td>${material}</td><td>20:00</td><td>00:00</td><td>X</td></tr>`;
 const table=rows=>`<table class="user_progress_table"><thead><tr><th>출석인정 요구시간</th></tr></thead><tbody>${rows}</tbody></table>`;
+
+test('failed refresh cannot assert an old pending status; refreshed submission replaces it even if video fails',async()=>{
+ const previous={checkedAt:10,items:[{kind:'과제',title:'합성 팀 보고서',course:course.name,courseUrl:course.url,url:'https://eclass.dongguk.edu/mod/assign/view.php?id=7',due:200,state:'pending'}]};
+ const failed=await scanCourses({selected:[course],previous,read:async()=>{throw Error('network failure');}});
+ const old=failed.snapshot.items[0];assert.equal(old.state,'pending');assert.equal(old.stale,true);assert.equal(phase(old,100),'unknown');
+ const options={kind:'과제',submission:'pending',period:'all',now:100};
+ assert.equal(visibleItems(failed.snapshot.items,options).length,0);
+ assert.equal(visibleItems(failed.snapshot.items,{...options,submission:'all',period:'unknown'}).length,1);
+ assert.equal(phase({...old,state:'done'},100),'unknown','Old submitted status must not claim current submission either');
+ const refreshed=await scanCourses({selected:[course],previous:failed.snapshot,now:()=>100,read:async url=>{
+  if(url===course.url)return doc('<a href="/mod/assign/index.php?id=1">과제</a>');
+  return doc('<table><thead><tr><th>주차</th><th>학사 기간</th><th>차시</th><th>주제</th><th>제목</th><th>종료 일시</th><th>제출</th><th>성적</th></tr></thead><tbody><tr><td>10주차</td><td>2099/11/03 ~ 2099/11/09</td><td>2차시</td><td>2차시</td><td><a href="/mod/assign/view.php?id=7">합성 팀 보고서</a></td><td>2099/11/11 23:59</td><td>제출 완료</td><td>-</td></tr></tbody></table>');
+ }});
+ assert.equal(refreshed.partial,true,'Unrelated missing attendance scope still reports failure');
+ assert.equal(refreshed.snapshot.items.length,1);assert.equal(refreshed.snapshot.items[0].state,'done');assert.equal(refreshed.snapshot.items[0].stale,false);
+ assert.equal(visibleItems(refreshed.snapshot.items,{...options,submission:'done'}).length,1);
+ assert.equal(visibleItems(refreshed.snapshot.items,options).length,0);
+});
 
 test('unsupported learning is reported without guessing attendance or silently dropping it',async()=>{
  const home=doc('<a href="/mod/assign/index.php?id=1">과제</a><a href="/local/ubattendance/attendance_book.php?id=1">출석부</a><li class="activity modtype_econtents"><div class="activityinstance"><a href="/mod/econtents/view.php?id=5"><span class="instancename">이러닝 콘텐츠</span></a></div></li>');

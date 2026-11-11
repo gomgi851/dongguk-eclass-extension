@@ -53,7 +53,7 @@ function render(){
   });
   $('summary').textContent=checkedAt?`${date(checkedAt)} 확인`:'';
   $('summary').title=fullyCheckedAt?`마지막 전체 확인: ${date(fullyCheckedAt)}`:'전체 확인이 완료된 기록이 없습니다.';
-  const unknown=items.filter(i=>i.kind===kind&&i.state==='unknown').length;
+  const unknown=items.filter(i=>i.kind===kind&&phase(i)==='unknown').length;
   $('attention').hidden=!unknown;
   $('attention').textContent=`확인 필요 ${unknown}건 · 직접 확인 ›`;
   $('warnings').textContent=warnings.join('\n');
@@ -81,7 +81,10 @@ function render(){
       const learning=node('div',left>0?`요구시간까지 약 ${Math.ceil(left/60)}분`:'요구시간 도달 · 출석 확인 필요','learning');
       const bar=document.createElement('progress');bar.max=item.requiredSeconds;bar.value=Math.min(item.learnedSeconds,item.requiredSeconds);bar.setAttribute('aria-label','학습시간 진행률');learning.append(bar);row.append(learning);
     }
-    if(item.stale){row.classList.add('stale');row.append(node('div',`이전 결과 · ${date(item.checkedAt)}`,'stale-note'));}
+    if(item.stale){
+      const previous=item.state==='done'?(isTask?'제출함':'수강함'):item.state==='late'?'지각 인정':item.state==='pending'?(isTask?'미제출':'미수강'):'확인 필요';
+      row.classList.add('stale');row.append(node('div',`갱신 필요 · 이전 ${previous} · ${date(item.checkedAt)}`,'stale-note'));
+    }
 
     $('results').append(row);
   }
