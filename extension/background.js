@@ -1,3 +1,4 @@
+import {installAutoRefresh} from './auto-refresh.js';
 let creating=null,starting=null,writes=Promise.resolve();
 const offscreenURL=chrome.runtime.getURL('offscreen.html');
 async function contexts(){return chrome.runtime.getContexts({contextTypes:['OFFSCREEN_DOCUMENT'],documentUrls:[offscreenURL]});}
@@ -30,12 +31,12 @@ async function start(message){
   const requested=Array.isArray(message.selectedUrls)?message.selectedUrls:Array.isArray(selectedUrls)?selectedUrls:courseList.filter(c=>c.category==='교과').map(c=>c.url);
   if(message.mode==='scan'&&!requested.length)return {ok:false,error:'강좌를 하나 이상 선택하세요.'};
   const runId=crypto.randomUUID();
-  const job={runId,status:'running',mode:message.mode,startedAt:Date.now(),updatedAt:Date.now(),completed:0,total:requested.length,message:message.mode==='courses'?'강좌 목록 확인 중…':'로그인 상태 확인 중…'};
+  const job={runId,status:'running',mode:message.mode,automatic:message.automatic===true,startedAt:Date.now(),updatedAt:Date.now(),completed:0,total:requested.length,message:message.mode==='courses'?'강좌 목록 확인 중…':'로그인 상태 확인 중…'};
   const update={job};
-  if(message.mode==='scan'&&snapshot)update.snapshot={...snapshot,items:(snapshot.items||[]).map(item=>({...item,checkedAt:item.checkedAt||snapshot.checkedAt||null,stale:true}))};
+  if(message.mode==='scan'&&!message.automatic&&snapshot)update.snapshot={...snapshot,items:(snapshot.items||[]).map(item=>({...item,checkedAt:item.checkedAt||snapshot.checkedAt||null,stale:true}))};
   await chrome.storage.local.set(update);
   try{
-    const result=await chrome.runtime.sendMessage({target:'offscreen',type:'job:start',runId,mode:message.mode,selectedUrls:requested,previous:snapshot||{}});
+    const result=await chrome.runtime.sendMessage({target:'offscreen',type:'job:start',runId,mode:message.mode,automatic:message.automatic===true,selectedUrls:requested,previous:snapshot||{}});
     if(!result?.ok)throw Error(result?.error||'확인을 시작하지 못했습니다.');
     return {ok:true};
   }catch(error){await chrome.storage.local.set({job:{...job,status:'error',message:error.message}});return {ok:false,error:error.message};}
@@ -67,3 +68,4 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
   handle(message).then(respond,error=>respond({ok:false,error:error.message}));
   return true;
 });
+installAutoRefresh({startJob:handle,beforeRun:()=>enqueue(reconcile)});

@@ -119,3 +119,4 @@ body,button,input,select,textarea,.meta,.deadline,.note,.font-credit,#warnings,#
 .attention-button{flex-shrink:0;text-align:left;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:var(--badge);color:var(--badge-ink);font-size:13px;line-height:1.5;cursor:pointer}
 .attention-button[hidden]{display:none}
 .unsupported-note{font-size:12px;line-height:1.5;color:var(--warn);margin-top:6px}
+#auto-refresh-minutes{height:40px;min-width:100px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:14px}

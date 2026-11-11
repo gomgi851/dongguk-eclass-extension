@@ -1,8 +1,19 @@
 import {ORIGIN,safeURL,phase} from './parser.js';
 import {visibleItems,deadlineRemaining} from './filters.js';
+import {refreshMinutes} from './auto-refresh.js';
 const $ = id=>document.getElementById(id);
 let courseList=[], items=[], warnings=[], checkedAt=null, fullyCheckedAt=null, busy=false, job=null;
 let kind='과제', submission='pending', selectedUrls=null;
+let autoRefresh=true,autoRefreshMinutes=15;
+function renderAutoRefresh(){
+  $('auto-refresh').checked=autoRefresh;
+  $('auto-refresh-minutes').value=String(autoRefreshMinutes);
+  $('auto-refresh-minutes').disabled=!autoRefresh;
+  $('auto-refresh-status').textContent=!autoRefresh?'자동 갱신 꺼짐':`약 ${autoRefreshMinutes}분마다 갱신 · 로그인 만료 시 건너뜁니다. Chrome 종료·절전 시 지연될 수 있습니다.`;
+  $('refresh').title=autoRefresh?`지금 새로고침 · 자동 갱신 ${autoRefreshMinutes}분 간격`:'새로고침';
+}
+$('auto-refresh').addEventListener('change',()=>{autoRefresh=$('auto-refresh').checked;renderAutoRefresh();chrome.storage.local.set({autoRefresh});});
+$('auto-refresh-minutes').addEventListener('change',()=>{autoRefreshMinutes=refreshMinutes(Number($('auto-refresh-minutes').value));renderAutoRefresh();chrome.storage.local.set({autoRefreshMinutes});});
 const labels={pending:'남음',upcoming:'공개 예정',unknown:'확인 필요',expired:'기한 지남',done:'완료·인정'};
 function node(tag,value,className){const el=document.createElement(tag);el.textContent=value;if(className)el.className=className;return el;}
 function openSettings(){
@@ -32,6 +43,7 @@ async function requestJob(message){
   finally{clearTimeout(timer);}
 }
 function renderJob(){
+  renderAutoRefresh();
   setBusy(job?.status==='running');
   $('scan-progress').hidden=!busy;
   $('scan-progress').max=Math.max(1,job?.total||1);
@@ -165,12 +177,16 @@ function applyData(data){
 chrome.storage.onChanged.addListener((changes,area)=>{
   if(area!=='local')return;
   if(changes.allWeeks)$('all-weeks').checked=changes.allWeeks.newValue===true;
+  if(changes.autoRefresh)autoRefresh=changes.autoRefresh.newValue!==false;
+  if(changes.autoRefreshMinutes)autoRefreshMinutes=refreshMinutes(changes.autoRefreshMinutes.newValue);
+  if(changes.autoRefresh||changes.autoRefreshMinutes)renderAutoRefresh();
   const data={};
   for(const key of ['snapshot','job','courseList','selectedUrls'])if(changes[key])data[key]=changes[key].newValue;
   if(Object.keys(data).length)applyData(data);
 });
 try{
-  const data=await chrome.storage.local.get(['snapshot','job','courseList','selectedUrls','view','scanIncomplete','theme','allWeeks']);
+  const data=await chrome.storage.local.get(['snapshot','job','courseList','selectedUrls','view','scanIncomplete','theme','allWeeks','autoRefresh','autoRefreshMinutes']);
+  autoRefresh=data.autoRefresh!==false;autoRefreshMinutes=refreshMinutes(data.autoRefreshMinutes);
   $('all-weeks').checked=data.allWeeks===true;
   if(data.theme==='light'){document.documentElement.dataset.theme='light';$('theme').checked=false;}
   if(data.view){kind=data.view.kind||kind;submission=data.view.submission||submission;$('filter').value=data.view.period||'all';}

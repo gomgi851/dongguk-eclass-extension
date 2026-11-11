@@ -53,6 +53,14 @@ test('installed MV3 popup, CSP, unknown items and theme/grid rendering',async({}
   await expect(popup.locator('html')).toHaveAttribute('data-theme','light');
   await expect(popup.locator('[data-submission="pending"]')).toHaveCSS('background-color','rgb(255, 255, 255)');
   await popup.getByRole('button',{name:'설정',exact:true}).click();
+  await expect(popup.getByRole('switch',{name:'백그라운드 자동 갱신'})).toBeChecked();
+  await popup.getByLabel('갱신 간격',{exact:true}).selectOption('30');
+  await expect.poll(()=>worker.evaluate(async()=> (await chrome.alarms.get('eclass-auto-refresh'))?.periodInMinutes)).toBe(30);
+  await popup.getByRole('switch',{name:'백그라운드 자동 갱신'}).uncheck();
+  await expect(popup.getByLabel('갱신 간격',{exact:true})).toBeDisabled();
+  await expect.poll(()=>worker.evaluate(async()=>!!(await chrome.alarms.get('eclass-auto-refresh')))).toBe(false);
+  await popup.getByRole('switch',{name:'백그라운드 자동 갱신'}).check();
+  await expect.poll(()=>worker.evaluate(async()=> (await chrome.alarms.get('eclass-auto-refresh'))?.periodInMinutes)).toBe(30);
   await popup.getByRole('switch',{name:'모든 주차 한 번에 보기'}).check();
   await popup.getByRole('button',{name:'설정 닫기'}).click();
   await expect(popup.locator('#csp-status')).toHaveText('이번 팝업의 CSP 차단: 0건');
@@ -90,6 +98,15 @@ test('installed MV3 popup, CSP, unknown items and theme/grid rendering',async({}
    }
    await expect(page.locator('.activityicon').first()).toHaveCSS('filter','none');
   }
+  await popup.close();
+  await worker.evaluate(async()=>{
+   const {job}=await chrome.storage.local.get('job');
+   await chrome.storage.local.set({job:{...job,startedAt:1},autoRefreshAttemptAt:0});
+   await chrome.alarms.create('eclass-auto-refresh',{when:Date.now()+500,periodInMinutes:30});
+  });
+  await expect.poll(()=>worker.evaluate(async()=>{const {job}=await chrome.storage.local.get('job');return job?.automatic===true&&job.status==='partial';}),{timeout:15000}).toBe(true);
+  const reopened=await context.newPage();await reopened.goto(`chrome-extension://${extensionId}/dashboard.html`);
+  await expect(reopened.locator('#settings-status')).toContainText('미지원 자료');
  }finally{
   await context.close();
   if(path.dirname(path.resolve(temporary))===path.resolve(os.tmpdir())&&path.basename(temporary).startsWith('eclass-mv3-'))await rm(temporary,{recursive:true,force:true});

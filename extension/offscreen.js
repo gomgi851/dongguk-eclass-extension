@@ -44,8 +44,14 @@ async function run(request){
     if(!selected.length)throw Error('선택한 강좌를 찾지 못했습니다. 강좌를 다시 선택하세요.');
     const result=await scanCourses({selected,previous:base,accountKey,read:url=>read(url,controller.signal),signal:controller.signal,
       onUpdate:({snapshot,...job})=>send({runId,snapshot,job:{...job,status:'running',mode}})});
+    if(request.automatic&&result.authExpired){
+      await send({runId,snapshot:base,done:true,job:{status:'skipped',mode,message:'',authExpired:false}});return;
+    }
     await send({runId,snapshot:result.snapshot,done:true,job:{...result,snapshot:undefined,status:result.stopped?'stopped':result.authExpired?'error':result.partial?'partial':'complete',mode}});
   }catch(error){
+    if(request.automatic&&error.code==='AUTH'){
+      await send({runId,snapshot:base,done:true,job:{status:'skipped',mode,message:'',authExpired:false}});return;
+    }
     await send({runId,done:true,job:{status:error.name==='AbortError'?'stopped':'error',mode,authExpired:error.code==='AUTH',message:error.name==='AbortError'?'중지했습니다.':error.message}});
   }finally{clearInterval(heartbeat);active=null;}
 }

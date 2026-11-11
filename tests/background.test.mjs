@@ -6,6 +6,7 @@ const listeners=[],data={courseList:[{name:'테스트 강좌',category:'교과',
 const clone=value=>structuredClone(value);
 let readerExists=false,failVideo=false,title='새 과제',delay=15,auth=false,student='9999000001';
 const runtime={id:'test-extension',getURL:path=>`chrome-extension://test-extension/${path}`,
+  onInstalled:{addListener(){}},onStartup:{addListener(){}},
   async getContexts(){return readerExists?[{contextType:'OFFSCREEN_DOCUMENT'}]:[];},
   onMessage:{addListener(fn){listeners.push(fn);}},
   sendMessage(message){if(message.target==='offscreen'&&message.type==='job:status'&&readerWarmup-->0)return Promise.reject(Error('Receiving end does not exist'));return new Promise((resolve,reject)=>{
@@ -16,7 +17,7 @@ const runtime={id:'test-extension',getURL:path=>`chrome-extension://test-extensi
     // Listeners may respond synchronously without returning true.
   });}
 };
-globalThis.chrome={runtime,storage:{local:{
+globalThis.chrome={runtime,alarms:{async get(){return null;},async create(){},async clear(){},onAlarm:{addListener(){}}},storage:{onChanged:{addListener(){}},local:{
   async get(keys){return Object.fromEntries([].concat(keys).map(k=>[k,clone(data[k])]));},
   async set(value){Object.assign(data,clone(value));}
 }},offscreen:{async createDocument(options){assert.deepEqual(options.reasons,['DOM_PARSER']);readerExists=true;await import('../extension/offscreen.js');}}};
@@ -73,6 +74,11 @@ failVideo=false;delay=1;await send({type:'job:start',mode:'scan',selectedUrls});
 assert.ok(data.snapshot.items.every(i=>!i.stale));const lastFullSuccess=data.snapshot.fullyCheckedAt;
 auth=true;delay=1;await send({type:'job:start',mode:'scan',selectedUrls});await finished();
 assert.equal(data.job.status,'error');assert.equal(data.job.authExpired,true);assert.ok(data.snapshot.items.every(i=>i.stale));assert.equal(data.snapshot.fullyCheckedAt,lastFullSuccess);assert.equal(data.snapshot.items.length,2);
+const beforeSilentSkip=clone(data.snapshot);
+await send({type:'job:start',mode:'scan',selectedUrls,automatic:true});await finished();
+assert.equal(data.job.status,'skipped');assert.equal(data.job.message,'');assert.equal(data.job.authExpired,false);assert.deepEqual(data.snapshot,beforeSilentSkip,'Automatic login expiry must not change cached cards or show an error');
+auth=false;await send({type:'job:start',mode:'scan',selectedUrls,automatic:true});await finished();
+assert.equal(data.job.status,'complete');assert.ok(data.snapshot.items.every(i=>!i.stale),'Automatic retry after login restores fresh results without manual refresh');
 auth=false;failVideo=true;student='9999000002';await send({type:'job:start',mode:'scan',selectedUrls});await finished();
 assert.equal(data.snapshot.items.length,1,'Another account must not inherit the old video results');
 assert.equal(data.snapshot.items[0].kind,'과제');

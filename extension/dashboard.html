@@ -11,11 +11,14 @@
 <div id="results"></div>
 <dialog id="settings-dialog" aria-labelledby="settings-title"><div class="dialog-header"><h2 id="settings-title">설정</h2><button id="close-settings" class="icon-button" aria-label="설정 닫기" title="닫기">×</button></div>
 <div class="preference-row"><div><label for="all-weeks">모든 주차 한 번에 보기</label><p class="note">강의실 페이지에 적용</p></div><label class="preference-switch"><input id="all-weeks" type="checkbox" role="switch" aria-label="모든 주차 한 번에 보기"><span aria-hidden="true"></span></label></div>
+<div class="preference-row"><div><label for="auto-refresh">백그라운드 자동 갱신</label><p class="note">팝업을 닫아도 선택 강좌 확인</p></div><label class="preference-switch"><input id="auto-refresh" type="checkbox" role="switch" aria-label="백그라운드 자동 갱신" checked><span aria-hidden="true"></span></label></div>
+<div class="preference-row"><label for="auto-refresh-minutes">갱신 간격</label><select id="auto-refresh-minutes"><option value="5">5분</option><option value="15" selected>15분</option><option value="30">30분</option><option value="60">60분</option></select></div>
+<p id="auto-refresh-status" class="note" role="status"></p>
 <p id="font-status" class="note">글꼴 확인 중…</p>
 <p class="font-credit">㈜여기어때컴퍼니 제공 잘난체 2 사용<br><a href="licenses/Jalnan-Official-Guide.pdf" target="_blank" rel="noopener">글꼴 저작권·라이선스 원문 ↗</a></p>
 <details id="warning-details" hidden><summary id="warning-count"></summary><div id="warnings"></div></details>
 <details id="settings"><summary>강좌 설정</summary><div class="settings-actions"><button id="load">강좌 불러오기</button><button id="scan" disabled>선택 강좌 확인</button><button id="stop" disabled>중지</button></div><p id="settings-status" class="note" role="status" aria-live="polite"></p><a id="settings-login" class="settings-site-link" href="https://eclass.dongguk.edu/" target="_blank" rel="noopener" hidden>e-Class 로그인 ↗</a><div id="courses"></div><p class="note">팝업을 닫아도 확인이 이어집니다.</p><button id="clear" class="text-button">저장 정보 지우기</button><p class="note">퀴즈·설문 제외 · 이 기기에만 저장</p></details>
 <details id="runtime-diagnostics"><summary>실행 정보</summary><p id="runtime-version" class="note"></p><p id="csp-status" class="note" role="status"></p><p id="csp-details" class="note"></p></details>
-<a class="settings-site-link" href="changelog.html" target="_blank" rel="noopener">업데이트 내역 · v0.7.4 ↗</a>
+<a class="settings-site-link" href="changelog.html" target="_blank" rel="noopener">업데이트 내역 · v0.7.5 ↗</a>
 <a class="settings-site-link" href="https://eclass.dongguk.edu/" target="_blank" rel="noopener">강의실 열기 ↗</a></dialog>
 </main><script type="module" src="dashboard.js"></script></body></html>
