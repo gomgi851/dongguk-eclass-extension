@@ -4,6 +4,35 @@ import {refreshMinutes} from './auto-refresh.js';
 const $ = id=>document.getElementById(id);
 let courseList=[], items=[], warnings=[], checkedAt=null, fullyCheckedAt=null, busy=false, job=null;
 let kind='과제', submission='pending', selectedUrls=null;
+let manualTasks=[];
+function allItems(){return [...items,...manualTasks];}
+const manualDialog=$('manual-task-dialog');
+const addTask=$('add-manual-task');
+$('refresh').before(addTask);
+addTask.addEventListener('click',()=>{
+  const select=$('manual-course');select.replaceChildren();
+  for(const c of courseList){const option=node('option',c.name);option.value=c.url;select.append(option);}
+  $('manual-error').textContent='';
+  if(!courseList.length){showStatus('먼저 강좌 설정에서 강좌를 불러오세요.');openSettings();return;}
+  manualDialog.showModal();select.focus();
+});
+$('manual-task-close').addEventListener('click',()=>manualDialog.close());
+$('manual-task-form').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const course=courseList.find(c=>c.url===$('manual-course').value),title=$('manual-title').value.trim();
+  const due=Date.parse($('manual-due').value+':00+09:00');
+  if(!course||!title||!Number.isFinite(due)){$('manual-error').textContent='과목, 마감 날짜·시간, 제목을 확인하세요.';return;}
+  $('manual-save').disabled=true;
+  try{
+    const task={id:'manual:'+crypto.randomUUID(),manual:true,kind:'과제',state:'pending',course:course.name,title,due,url:course.url,evidence:'사용자가 직접 추가한 과제 · 제출 상태 자동 확인 안 함'};
+    const saved=await chrome.storage.local.get('manualTasks');
+    manualTasks=[...(saved.manualTasks||[]),task];
+    await chrome.storage.local.set({manualTasks});
+    kind='과제';submission='pending';$('filter').value='all';render();rememberView();
+    $('manual-task-form').reset();manualDialog.close();
+  }catch{$('manual-error').textContent='저장하지 못했습니다. 다시 시도하세요.';}
+  finally{$('manual-save').disabled=false;}
+});
 let autoRefresh=true,autoRefreshMinutes=15;
 function renderAutoRefresh(){
   $('auto-refresh').checked=autoRefresh;
@@ -56,12 +85,13 @@ function renderJob(){
 function render(){
   syncPeriod();
   const isTask=kind==='과제';
+  addTask.hidden=!isTask;
   document.querySelectorAll('[data-kind]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.kind===kind)));
   document.querySelectorAll('[data-submission]').forEach(b=>{
     const mode=b.dataset.submission;
     b.setAttribute('aria-pressed',String(mode===submission));
     b.querySelector('.label').textContent=mode==='all'?'전체':mode==='done'?(isTask?'제출함':'수강함'):(isTask?'미제출':'미수강');
-    b.querySelector('.count').textContent=visibleItems(items,{kind,submission:mode,period:$('filter').value}).length;
+    b.querySelector('.count').textContent=visibleItems(allItems(),{kind,submission:mode,period:$('filter').value}).length;
   });
   $('summary').textContent=checkedAt?`${date(checkedAt)} 확인`:'';
   $('summary').title=fullyCheckedAt?`마지막 전체 확인: ${date(fullyCheckedAt)}`:'전체 확인이 완료된 기록이 없습니다.';
@@ -73,11 +103,11 @@ function render(){
   $('settings-dot').hidden=!warnings.length;
   $('settings-button').title=warnings.length?`설정 · 확인 안내 ${warnings.length}건`:'설정';
   $('warning-count').textContent=`확인 안내 ${warnings.length}건`;
-  const list=visibleItems(items,{kind,submission,period:$('filter').value});
+  const list=visibleItems(allItems(),{kind,submission,period:$('filter').value});
   $('results').replaceChildren();
   if(!list.length){$('results').append(node('p',busy?'확인 중입니다. 잠시만 기다려 주세요.':items.length?'이 필터에 해당하는 항목이 없습니다.':warnings.length?'확인하지 못한 강좌가 있습니다. 설정의 안내를 확인하세요.':checkedAt?'확인된 항목이 없습니다.':courseList.length?'선택한 강좌를 확인해 주세요.':'강좌 설정에서 시작하세요.','note'));return;}
   for(const item of list){
-    const row=node('article','','item'), a=node('a',item.title),meta=node('div','','item-meta'),top=node('div','','item-top');
+    const row=node('article','','item'), a=node(item.manual?'span':'a',item.title,item.manual?'manual-task-name':''),meta=node('div','','item-meta'),top=node('div','','item-top');
     a.href=safeURL(item.url)||ORIGIN;a.target='_blank';a.rel='noopener';
     a.title=kind==='과제'?'과제 열기 · 수정 가능 여부는 강의실에서 확인':item.title;
     const state=phase(item);
@@ -87,6 +117,18 @@ function render(){
     if(state!=='done'&&state!=='unknown')top.append(node('span',state==='upcoming'?'공개 예정':remaining(item.due),`countdown ${state==='expired'?'expired':''}`));
     meta.append(node('span',state==='upcoming'?`${date(item.start)} 공개`:`${date(item.due)}${item.due?' 마감':''}`,'deadline'),badge);
     row.append(top,a,meta);
+    if(item.manual){
+      badge.textContent='직접 추가';badge.title=item.evidence;
+      const remove=node('button','×','manual-delete');remove.type='button';remove.setAttribute('aria-label',`${item.title} 삭제`);remove.title='직접 추가한 과제 삭제';
+      remove.addEventListener('click',async()=>{
+        remove.disabled=true;
+        try{const saved=await chrome.storage.local.get('manualTasks');const next=(saved.manualTasks||[]).filter(t=>t.id!==item.id);await chrome.storage.local.set({manualTasks:next});manualTasks=next;render();}
+        catch{remove.disabled=false;showStatus('과제를 삭제하지 못했습니다. 다시 시도하세요.',true);}
+      });
+      const actions=node('div','','item-actions');
+      actions.append(badge,remove);
+      meta.append(actions);
+    }
     if(item.unsupported)row.append(node('div','출석 자동 확인 불가 · 학교에서 직접 확인','unsupported-note'));
     if(item.kind==='동영상'&&state!=='done'&&item.requiredSeconds>0&&Number.isFinite(item.learnedSeconds)){
       const left=Math.max(0,item.requiredSeconds-item.learnedSeconds);
@@ -168,6 +210,7 @@ $('filter-menu').addEventListener('keydown',event=>{
 document.addEventListener('click',event=>{if(!event.target.closest('.filter-control'))closePeriod();});
 document.addEventListener('focusin',event=>{if(!event.target.closest('.filter-control'))closePeriod();});
 function applyData(data){
+  if(Object.hasOwn(data,'manualTasks'))manualTasks=Array.isArray(data.manualTasks)?data.manualTasks:[];
   if(Object.hasOwn(data,'snapshot')){const snapshot=data.snapshot||{};items=snapshot.items||[];warnings=snapshot.warnings||[];checkedAt=snapshot.checkedAt||null;fullyCheckedAt=snapshot.fullyCheckedAt||null;}
   if(Object.hasOwn(data,'job'))job=data.job||null;
   if(Object.hasOwn(data,'courseList'))courseList=data.courseList||[];
@@ -181,11 +224,11 @@ chrome.storage.onChanged.addListener((changes,area)=>{
   if(changes.autoRefreshMinutes)autoRefreshMinutes=refreshMinutes(changes.autoRefreshMinutes.newValue);
   if(changes.autoRefresh||changes.autoRefreshMinutes)renderAutoRefresh();
   const data={};
-  for(const key of ['snapshot','job','courseList','selectedUrls'])if(changes[key])data[key]=changes[key].newValue;
+  for(const key of ['snapshot','job','courseList','selectedUrls','manualTasks'])if(changes[key])data[key]=changes[key].newValue;
   if(Object.keys(data).length)applyData(data);
 });
 try{
-  const data=await chrome.storage.local.get(['snapshot','job','courseList','selectedUrls','view','scanIncomplete','theme','allWeeks','autoRefresh','autoRefreshMinutes']);
+  const data=await chrome.storage.local.get(['snapshot','job','courseList','selectedUrls','manualTasks','view','scanIncomplete','theme','allWeeks','autoRefresh','autoRefreshMinutes']);
   autoRefresh=data.autoRefresh!==false;autoRefreshMinutes=refreshMinutes(data.autoRefreshMinutes);
   $('all-weeks').checked=data.allWeeks===true;
   if(data.theme==='light'){document.documentElement.dataset.theme='light';$('theme').checked=false;}

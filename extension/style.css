@@ -120,3 +120,14 @@ body,button,input,select,textarea,.meta,.deadline,.note,.font-credit,#warnings,#
 .attention-button[hidden]{display:none}
 .unsupported-note{font-size:12px;line-height:1.5;color:var(--warn);margin-top:6px}
 #auto-refresh-minutes{height:40px;min-width:100px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:14px}
+#manual-task-dialog{width:calc(100% - 32px);max-width:448px;max-height:calc(100% - 32px);padding:18px;border:1px solid var(--border);border-radius:12px;background:var(--dialog);color:var(--text);overflow:auto}
+#manual-task-dialog::backdrop{background:#30282066;backdrop-filter:blur(3px)}
+#add-manual-task[hidden]{display:none}
+#manual-task-form{display:flex;flex-direction:column;gap:14px}
+#manual-task-form label{display:flex;flex-direction:column;gap:8px;font-size:14px}
+#manual-task-form input,#manual-task-form select{box-sizing:border-box;width:100%;min-width:0;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font:inherit}
+#manual-error{margin:0;color:var(--warn);font-size:13px}
+.item-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.manual-delete{flex-shrink:0;width:28px;height:28px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:23px;cursor:pointer}
+.manual-delete:hover{background:var(--subtle);color:var(--text)}
+.manual-task-name{display:block;overflow-wrap:anywhere;margin:8px 0;line-height:1.5;color:var(--text)}

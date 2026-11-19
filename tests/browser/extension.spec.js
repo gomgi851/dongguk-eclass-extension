@@ -33,6 +33,42 @@ test('installed MV3 popup, CSP, unknown items and theme/grid rendering',async({}
   await popup.getByRole('button',{name:'선택 강좌 확인',exact:true}).click();
   await expect(popup.locator('#settings-status')).toContainText('미지원 자료', {timeout:30000});
   await popup.getByRole('button',{name:'설정 닫기'}).click();
+  await popup.getByRole('button',{name:'과제 직접 추가',exact:true}).click();
+  await popup.locator('#manual-title').fill('이메일 제출 보고서');
+  await popup.locator('#manual-due').fill('2030-12-25T23:59');
+  await popup.locator('#manual-save').click();
+  await expect(popup.locator('#results')).toContainText('이메일 제출 보고서');
+  await expect(popup.locator('#results')).toContainText('직접 추가');
+  await popup.reload();
+  await expect(popup.locator('#results')).toContainText('이메일 제출 보고서');
+  const manual=await worker.evaluate(async()=> (await chrome.storage.local.get('manualTasks')).manualTasks);
+  expect(manual).toHaveLength(1);
+  expect(manual[0].due).toBe(Date.parse('2030-12-25T23:59:00+09:00'));
+  for(const dark of [false,true]){
+    await popup.getByRole('switch',{name:'다크 모드',exact:true}).setChecked(dark);
+    for(const width of [360,480]){
+      await popup.setViewportSize({width,height:600});
+      const card=popup.locator('.item').filter({hasText:'이메일 제출 보고서'});
+      const geometry=await card.evaluate(row=>{
+        const top=row.querySelector('.item-top').getBoundingClientRect();
+        const countdown=row.querySelector('.countdown').getBoundingClientRect();
+        const remove=row.querySelector('.manual-delete').getBoundingClientRect();
+        return {rightGap:top.right-countdown.right,deleteBelow:remove.top>=countdown.bottom,topChildren:row.querySelector('.item-top').children.length};
+      });
+      expect(Math.abs(geometry.rightGap)).toBeLessThan(1);
+      expect(geometry.deleteBelow).toBe(true);
+      expect(geometry.topChildren).toBe(2);
+      await popup.screenshot({path:testInfo.outputPath(`manual-aligned-${dark?'dark':'light'}-${width}.png`)});
+    }
+  }
+  await popup.setViewportSize({width:480,height:600});
+  await popup.getByRole('switch',{name:'다크 모드',exact:true}).uncheck();
+  await popup.getByRole('button',{name:'과제 직접 추가',exact:true}).click();
+  await popup.screenshot({path:testInfo.outputPath('manual-task-dialog.png')});
+  await popup.locator('#manual-task-close').click();
+  await popup.getByRole('button',{name:'이메일 제출 보고서 삭제',exact:true}).click();
+  await expect(popup.locator('#results')).not.toContainText('이메일 제출 보고서');
+  expect(await worker.evaluate(async()=> (await chrome.storage.local.get('manualTasks')).manualTasks)).toEqual([]);
   await popup.getByRole('button',{name:'확인 필요 1건 · 직접 확인 ›',exact:true}).click();
   await expect(popup.locator('#results')).toContainText('확인 필요한 과제');
   const originalSnapshot=await worker.evaluate(async()=> (await chrome.storage.local.get('snapshot')).snapshot);
